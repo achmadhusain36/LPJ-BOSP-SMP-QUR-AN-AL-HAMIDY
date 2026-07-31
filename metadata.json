@@ -1,0 +1,6 @@
+{
+  "name": "LPJ BOSP Tahap 1 2026 - SMP Quran Al-Hamidy",
+  "description": "Aplikasi Generator & Rekonsiliasi Laporan Pertanggungjawaban (LPJ) Dana BOSP Reguler Tahap 1 Tahun 2026 SMP Quran Al-Hamidy",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
