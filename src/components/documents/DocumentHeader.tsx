@@ -18,34 +18,25 @@ export const DocumentHeader: React.FC<DocumentHeaderProps> = ({
 }) => {
   const [imageError, setImageError] = useState(false);
 
-  const hasImage = Boolean(schoolInfo.letterheadImage && !imageError);
-  const shouldShowImage =
-    hasImage && (!isLandscape || schoolInfo.showLetterheadOnLandscape);
-
   // 2. HALAMAN LANDSCAPE (HORIZONTAL): KOSONGKAN BAGIAN HEADER SEPENUHNYA
-  if (isLandscape && !shouldShowImage) {
+  if (isLandscape) {
     return null;
   }
+
+  const hasImage = Boolean(schoolInfo.letterheadImage && !imageError);
 
   const settings = schoolInfo.letterheadSettings || {
     heightMm: 40,
     scalePercent: 100,
-    marginTopMm: 10,
+    marginTopMm: 0,
     marginBottomMm: 8,
-    horizontalMarginMm: 0,
-    align: "center",
     borderStyle: "double",
   };
 
   const heightMm = settings.heightMm ?? 40;
-  const scalePercent = settings.scalePercent ?? 100;
-  const marginTopMm = settings.marginTopMm ?? 10;
-  const marginBottomMm = settings.marginBottomMm ?? 8;
-  const horizontalMarginMm = settings.horizontalMarginMm ?? 0;
-  const align = settings.align ?? "center";
-  const borderStyle = settings.borderStyle ?? "double";
+  const isHighImage = heightMm > 45;
 
-  const getBorderCss = (bStyle: string) => {
+  const getBorderCss = (bStyle?: string) => {
     switch (bStyle) {
       case "solid":
         return "border-b-2 border-slate-900";
@@ -59,58 +50,46 @@ export const DocumentHeader: React.FC<DocumentHeaderProps> = ({
     }
   };
 
-  const getAlignCss = (aStyle: string) => {
-    switch (aStyle) {
-      case "left":
-        return "justify-start";
-      case "right":
-        return "justify-end";
-      case "full":
-        return "justify-center w-full";
-      case "center":
-      default:
-        return "justify-center";
-    }
-  };
-
   return (
     <div className="w-full relative print:mb-2 text-slate-900">
-      {/* 1. PORTRAIT WITH IMAGE */}
-      {shouldShowImage ? (
+      {/* 1. HALAMAN PORTRAIT (VERTIKAL) */}
+      {hasImage ? (
+        /* A1. GAMBAR KOP PNG */
         <div
-          className={`w-full relative ${getBorderCss(borderStyle)}`}
-          style={{
-            marginTop: `${marginTopMm}mm`,
-            marginBottom: `${marginBottomMm}mm`,
-            paddingLeft: `${horizontalMarginMm}mm`,
-            paddingRight: `${horizontalMarginMm}mm`,
-            paddingBottom: "2mm",
-          }}
+          className={`w-full relative pb-2 mb-3 ${getBorderCss(settings.borderStyle)}`}
         >
-          <div className={`flex items-center relative w-full ${getAlignCss(align)}`}>
-            <img
-              src={schoolInfo.letterheadImage}
-              alt="Kop Surat Sekolah"
-              onError={() => setImageError(true)}
-              style={{
-                height: `${Math.min(heightMm, 45)}mm`,
-                maxHeight: "45mm",
-                width: align === "full" ? "100%" : "170mm",
-                maxWidth: "100%",
-                transform: `scale(${scalePercent / 100})`,
-                transformOrigin:
-                  align === "left"
-                    ? "left center"
-                    : align === "right"
-                    ? "right center"
-                    : "center center",
-                objectFit: "contain",
-              }}
-              className="transition-all duration-200 mx-auto"
-            />
+          <div className="relative w-full flex items-center justify-between">
+            {isHighImage ? (
+              /* Jika tinggi > 45 mm: skala ulang tinggi=45 mm, letakkan rata tengah secara horizontal */
+              <img
+                src={schoolInfo.letterheadImage}
+                alt="Kop Surat Sekolah"
+                onError={() => setImageError(true)}
+                style={{
+                  height: "45mm",
+                  maxHeight: "45mm",
+                  width: "auto",
+                }}
+                className="mx-auto block object-contain"
+              />
+            ) : (
+              /* Jika tinggi <= 45 mm: gambar full width (lebar 170 mm) dan rata kiri (menempel penuh kiri-kanan) */
+              <img
+                src={schoolInfo.letterheadImage}
+                alt="Kop Surat Sekolah"
+                onError={() => setImageError(true)}
+                style={{
+                  width: "100%",
+                  height: `${heightMm}mm`,
+                  maxHeight: "45mm",
+                }}
+                className="w-full block object-fill sm:object-contain"
+              />
+            )}
+
             {docCode && (
               <div className="absolute top-0 right-0 hidden sm:block print:block">
-                <div className="px-2 py-0.5 bg-slate-100 text-slate-800 border border-slate-700 rounded text-[9px] font-bold print:border-gray-800 print:bg-white print:text-black">
+                <div className="px-2 py-0.5 bg-slate-100 text-slate-900 border border-slate-700 rounded text-[9px] font-bold print:border-gray-800 print:bg-white">
                   {docCode}
                 </div>
               </div>
@@ -118,7 +97,7 @@ export const DocumentHeader: React.FC<DocumentHeaderProps> = ({
           </div>
         </div>
       ) : (
-        /* 1. PORTRAIT WITHOUT IMAGE: DEFAULT TEXT HEADER */
+        /* A2. TEKS HEADER DEFAULT (JIKA TIDAK ADA GAMBAR) */
         <div className="w-full mb-3 border-b-4 border-double border-slate-900 pb-2 relative flex justify-between items-start">
           <div className="text-left space-y-0.5">
             {/* Nama Sekolah (font 14, bold, rata kiri) */}
