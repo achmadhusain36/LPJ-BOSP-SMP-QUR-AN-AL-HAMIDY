@@ -38,7 +38,8 @@ import { DocChecklist28 } from "./documents/DocChecklist28";
 import { DocFullBundle } from "./documents/DocFullBundle";
 import { KopSuratModal } from "./KopSuratModal";
 import { HeaderEditor } from "./HeaderEditor";
-import { Printer, FileText, Layers, Filter, RefreshCw, Calendar, Clock, Image as ImageIcon, Sliders } from "lucide-react";
+import { generateLpjWordDocument } from "../utils/exportWord";
+import { Printer, FileText, Layers, Filter, RefreshCw, Calendar, Clock, Image as ImageIcon, Sliders, Download } from "lucide-react";
 
 interface DocumentViewerProps {
   schoolInfo: SchoolInfo;
@@ -223,8 +224,28 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = (props) => {
     };
   }, [props.schoolInfo, periodText, selectedStage]);
 
+  const [isExportingWord, setIsExportingWord] = useState(false);
+
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleExportWord = async () => {
+    try {
+      setIsExportingWord(true);
+      await generateLpjWordDocument({
+        schoolInfo: filteredSchoolInfo,
+        transactions: filteredTransactions,
+        financialSummary: filteredFinancialSummary,
+        form3Rows: filteredForm3Rows,
+        docType: selectedDoc,
+      });
+    } catch (err) {
+      console.error("Gagal mengunduh dokumen Word:", err);
+      alert("Gagal mengunduh dokumen Word. Silakan coba kembali.");
+    } finally {
+      setIsExportingWord(false);
+    }
   };
 
   const docTitles: Record<DocumentType, string> = {
@@ -335,6 +356,18 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = (props) => {
             <ImageIcon className="w-4 h-4 text-blue-600" />
             <span>
               {props.schoolInfo.letterheadImage ? "Pengaturan Kop" : "Unggah Kop PNG"}
+            </span>
+          </button>
+
+          <button
+            onClick={handleExportWord}
+            disabled={isExportingWord}
+            className="bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white font-semibold px-4 py-2 rounded-lg text-xs flex items-center gap-2 shadow-xs transition cursor-pointer"
+            title="Unduh berkas dokumen LPJ dalam format Microsoft Word (.docx) untuk disunting"
+          >
+            <Download className="w-4 h-4 text-emerald-200" />
+            <span>
+              {isExportingWord ? "Menyiapkan Word..." : "Unduh Word (.docx)"}
             </span>
           </button>
 
