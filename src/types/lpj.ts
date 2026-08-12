@@ -30,6 +30,7 @@ export interface SchoolInfo {
   letterheadImage?: string; // Base64 PNG data URL or SVG path
   showLetterheadOnLandscape?: boolean; // Default false
   letterheadSettings?: LetterheadSettings;
+  hideHeader?: boolean; // Option to hide Kop Surat / Header
 }
 
 export type SpendingCategory = "barang_jasa" | "honor" | "modal" | "transfer";

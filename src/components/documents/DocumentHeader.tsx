@@ -7,6 +7,7 @@ interface DocumentHeaderProps {
   docSubtitle?: string;
   docCode?: string;
   isLandscape?: boolean;
+  hideHeader?: boolean;
 }
 
 export const DocumentHeader: React.FC<DocumentHeaderProps> = ({
@@ -15,6 +16,7 @@ export const DocumentHeader: React.FC<DocumentHeaderProps> = ({
   docSubtitle,
   docCode,
   isLandscape = false,
+  hideHeader = false,
 }) => {
   const [imageError, setImageError] = useState(false);
   const [imgDimensions, setImgDimensions] = useState<{
@@ -22,8 +24,8 @@ export const DocumentHeader: React.FC<DocumentHeaderProps> = ({
     naturalHeight: number;
   } | null>(null);
 
-  // 1. HALAMAN LANDSCAPE (HORIZONTAL): KOSONGKAN BAGIAN HEADER SEPENUHNYA
-  if (isLandscape) {
+  // Jika opsi Tanpa Kop Surat / Header aktif atau halaman Landscape
+  if (hideHeader || schoolInfo.hideHeader || isLandscape) {
     return null;
   }
 

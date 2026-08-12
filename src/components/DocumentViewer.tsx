@@ -39,7 +39,7 @@ import { DocFullBundle } from "./documents/DocFullBundle";
 import { KopSuratModal } from "./KopSuratModal";
 import { HeaderEditor } from "./HeaderEditor";
 import { generateLpjWordDocument } from "../utils/exportWord";
-import { Printer, FileText, Layers, Filter, RefreshCw, Calendar, Clock, Image as ImageIcon, Sliders, Download } from "lucide-react";
+import { Printer, FileText, Layers, Filter, RefreshCw, Calendar, Clock, Image as ImageIcon, Sliders, Download, Eye, EyeOff } from "lucide-react";
 
 interface DocumentViewerProps {
   schoolInfo: SchoolInfo;
@@ -79,6 +79,7 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = (props) => {
   const [selectedDoc, setSelectedDoc] = useState<DocumentType>("BUNDLE_ALL");
   const [isKopModalOpen, setIsKopModalOpen] = useState(false);
   const [showQuickKopToolbar, setShowQuickKopToolbar] = useState(false);
+  const [isHeaderHidden, setIsHeaderHidden] = useState(false);
 
   // Filter States: Tahapan, Triwulan, Bulan
   const [selectedStage, setSelectedStage] = useState<string>("semua");
@@ -221,8 +222,9 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = (props) => {
             ? "Tahap 1"
             : "Tahap 2"
           : props.schoolInfo.stage,
+      hideHeader: isHeaderHidden,
     };
-  }, [props.schoolInfo, periodText, selectedStage]);
+  }, [props.schoolInfo, periodText, selectedStage, isHeaderHidden]);
 
   const [isExportingWord, setIsExportingWord] = useState(false);
 
@@ -239,6 +241,7 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = (props) => {
         financialSummary: filteredFinancialSummary,
         form3Rows: filteredForm3Rows,
         docType: selectedDoc,
+        hideHeader: isHeaderHidden,
       });
     } catch (err) {
       console.error("Gagal mengunduh dokumen Word:", err);
@@ -330,6 +333,32 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = (props) => {
             <option value="FORM3_REKON">Lampiran: Form 3 Belanja &amp; Rekon</option>
             <option value="CHECKLIST28">Lampiran: Checklist 28 Instrumen</option>
           </select>
+
+          <button
+            onClick={() => setIsHeaderHidden((prev) => !prev)}
+            className={`px-3 py-2 border rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ${
+              isHeaderHidden
+                ? "bg-amber-600 border-amber-600 text-white shadow-xs"
+                : "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200"
+            }`}
+            title={
+              isHeaderHidden
+                ? "Kop Surat / Header disembunyikan. Klik untuk menampilkan kembali Kop Surat."
+                : "Klik untuk menyembunyikan Kop Surat / Header pada tampilan & ekspor Word."
+            }
+          >
+            {isHeaderHidden ? (
+              <>
+                <EyeOff className="w-4 h-4 text-amber-100" />
+                <span>Tanpa Kop (Aktif)</span>
+              </>
+            ) : (
+              <>
+                <Eye className="w-4 h-4 text-slate-500" />
+                <span>Opsi Tanpa Kop</span>
+              </>
+            )}
+          </button>
 
           <button
             onClick={() => setShowQuickKopToolbar((prev) => !prev)}
@@ -476,8 +505,15 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = (props) => {
             Pratinjau Dokumen: <strong className="font-bold text-white">{docTitles[selectedDoc]}</strong>
           </span>
         </span>
-        <span className="text-[11px] text-slate-300 font-medium">
-          {filteredSchoolInfo.name} | {filteredSchoolInfo.period}
+        <span className="text-[11px] text-slate-300 font-medium flex items-center gap-2">
+          {isHeaderHidden && (
+            <span className="bg-amber-500/20 text-amber-300 text-[10px] px-2 py-0.5 rounded-full border border-amber-500/40 font-bold flex items-center gap-1">
+              <EyeOff className="w-3 h-3" /> Tanpa Kop / Header
+            </span>
+          )}
+          <span>
+            {filteredSchoolInfo.name} | {filteredSchoolInfo.period}
+          </span>
         </span>
       </div>
 

@@ -41,76 +41,84 @@ export async function generateLpjWordDocument({
   financialSummary,
   form3Rows,
   docType = "ALL",
+  hideHeader = false,
 }: {
   schoolInfo: SchoolInfo;
   transactions: BkuTransaction[];
   financialSummary: FinancialSummary;
   form3Rows: Form3Row[];
   docType?: string;
+  hideHeader?: boolean;
 }) {
   const children: any[] = [];
 
   const stageText = schoolInfo.stage || "Tahap 1";
   const yearText = schoolInfo.year || 2026;
+  const shouldHideHeader = hideHeader || Boolean(schoolInfo.hideHeader);
 
   // Helper for Kop Surat
-  const createKopSurat = () => [
-    new Paragraph({
-      alignment: AlignmentType.CENTER,
-      children: [
-        new TextRun({
-          text: `PEMERINTAH KABUPATEN ${schoolInfo.regency ? schoolInfo.regency.toUpperCase() : "PRINGSEWU"}`,
-          bold: true,
-          size: 20,
-          font: "Times New Roman",
-        }),
-      ],
-    }),
-    new Paragraph({
-      alignment: AlignmentType.CENTER,
-      children: [
-        new TextRun({
-          text: "DINAS PENDIDIKAN DAN KEBUDAYAAN",
-          bold: true,
-          size: 22,
-          font: "Times New Roman",
-        }),
-      ],
-    }),
-    new Paragraph({
-      alignment: AlignmentType.CENTER,
-      children: [
-        new TextRun({
-          text: schoolInfo.name.toUpperCase(),
-          bold: true,
-          size: 24,
-          font: "Times New Roman",
-        }),
-      ],
-    }),
-    new Paragraph({
-      alignment: AlignmentType.CENTER,
-      children: [
-        new TextRun({
-          text: `${schoolInfo.address} | NPSN: ${schoolInfo.npsn}`,
-          size: 18,
-          italics: true,
-          font: "Times New Roman",
-        }),
-      ],
-    }),
-    new Paragraph({
-      alignment: AlignmentType.CENTER,
-      children: [
-        new TextRun({
-          text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-          bold: true,
-          size: 20,
-        }),
-      ],
-    }),
-    new Paragraph({ text: "", spacing: { after: 200 } }),
-  ];
+  const createKopSurat = () => {
+    if (shouldHideHeader) {
+      return [];
+    }
+    return [
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        children: [
+          new TextRun({
+            text: `PEMERINTAH KABUPATEN ${schoolInfo.regency ? schoolInfo.regency.toUpperCase() : "PRINGSEWU"}`,
+            bold: true,
+            size: 20,
+            font: "Times New Roman",
+          }),
+        ],
+      }),
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        children: [
+          new TextRun({
+            text: "DINAS PENDIDIKAN DAN KEBUDAYAAN",
+            bold: true,
+            size: 22,
+            font: "Times New Roman",
+          }),
+        ],
+      }),
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        children: [
+          new TextRun({
+            text: schoolInfo.name.toUpperCase(),
+            bold: true,
+            size: 24,
+            font: "Times New Roman",
+          }),
+        ],
+      }),
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        children: [
+          new TextRun({
+            text: `${schoolInfo.address} | NPSN: ${schoolInfo.npsn}`,
+            size: 18,
+            italics: true,
+            font: "Times New Roman",
+          }),
+        ],
+      }),
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        children: [
+          new TextRun({
+            text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+            bold: true,
+            size: 20,
+          }),
+        ],
+      }),
+      new Paragraph({ text: "", spacing: { after: 200 } }),
+    ];
+  };
 
   // Helper for Signatures Table
   const createSignatureTable = (dateStr = "30 Juni 2026") => {
