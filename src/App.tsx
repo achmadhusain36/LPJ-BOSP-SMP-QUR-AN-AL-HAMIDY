@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   SchoolInfo,
   BkuTransaction,
@@ -30,21 +30,50 @@ import { ComplianceChecker } from "./components/ComplianceChecker";
 import { AiAssistant } from "./components/AiAssistant";
 import { DocumentViewer } from "./components/DocumentViewer";
 import { SchoolProfileModal } from "./components/SchoolProfileModal";
+import { NotificationBanner } from "./components/NotificationBanner";
+
+const STORAGE_KEY = "LPJ_BOSP_STATE_2026";
 
 export const App: React.FC = () => {
-  // Application State
+  // Application State initialized with localStorage fallback
   const [activeTab, setActiveTab] = useState<
     "dashboard" | "bku" | "documents" | "compliance" | "ai_assistant"
   >("dashboard");
 
-  const [schoolInfo, setSchoolInfo] = useState<SchoolInfo>(initialSchoolInfo);
-  const [transactions, setTransactions] = useState<BkuTransaction[]>(initialBkuTransactions);
+  const [schoolInfo, setSchoolInfo] = useState<SchoolInfo>(() => {
+    try {
+      const saved = localStorage.getItem(`${STORAGE_KEY}_SCHOOL`);
+      return saved ? JSON.parse(saved) : initialSchoolInfo;
+    } catch {
+      return initialSchoolInfo;
+    }
+  });
+
+  const [transactions, setTransactions] = useState<BkuTransaction[]>(() => {
+    try {
+      const saved = localStorage.getItem(`${STORAGE_KEY}_TXS`);
+      return saved ? JSON.parse(saved) : initialBkuTransactions;
+    } catch {
+      return initialBkuTransactions;
+    }
+  });
+
   const [rkasItems, setRkasItems] = useState<RkasProgramItem[]>(initialRkasItems);
   const [assets, setAssets] = useState<AssetRow[]>(initialAssets);
   const [denominations, setDenominations] = useState<CashDenomination[]>(initialCashDenominations);
   const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>(initialChecklistItems);
 
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+
+  // Auto-save to localStorage whenever state changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(`${STORAGE_KEY}_SCHOOL`, JSON.stringify(schoolInfo));
+      localStorage.setItem(`${STORAGE_KEY}_TXS`, JSON.stringify(transactions));
+    } catch (e) {
+      console.warn("Unable to save LPJ state to localStorage", e);
+    }
+  }, [schoolInfo, transactions]);
 
   // Recalculated Financial Summary
   const financialSummary = useMemo(
@@ -74,7 +103,7 @@ export const App: React.FC = () => {
   const handleAddTransaction = (newTx: Omit<BkuTransaction, "id">) => {
     const txWithId: BkuTransaction = {
       ...newTx,
-      id: `tx-${Date.now()}`,
+      id: `tx-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
     };
     const updatedRaw = [...transactions, txWithId];
     const recalculated = recalculateBkuBalances(updatedRaw);
@@ -95,6 +124,30 @@ export const App: React.FC = () => {
 
   const handleResetBku = () => {
     setTransactions(initialBkuTransactions);
+    setSchoolInfo(initialSchoolInfo);
+    try {
+      localStorage.removeItem(`${STORAGE_KEY}_SCHOOL`);
+      localStorage.removeItem(`${STORAGE_KEY}_TXS`);
+    } catch (e) {}
+  };
+
+  const handleRestoreFullState = (data: {
+    schoolInfo: SchoolInfo;
+    transactions: BkuTransaction[];
+    rkasItems: RkasProgramItem[];
+    assets: AssetRow[];
+    denominations: CashDenomination[];
+    checklistItems: ChecklistItem[];
+  }) => {
+    if (data.schoolInfo) setSchoolInfo(data.schoolInfo);
+    if (data.transactions && data.transactions.length > 0) {
+      const recalculated = recalculateBkuBalances(data.transactions);
+      setTransactions(recalculated);
+    }
+    if (data.rkasItems) setRkasItems(data.rkasItems);
+    if (data.assets) setAssets(data.assets);
+    if (data.denominations) setDenominations(data.denominations);
+    if (data.checklistItems) setChecklistItems(data.checklistItems);
   };
 
   const handlePrintAll = () => {
@@ -106,6 +159,13 @@ export const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 text-gray-900 flex flex-col font-sans selection:bg-amber-300 selection:text-emerald-950">
+      {/* Top Notification & Deadline Reminder Banner */}
+      <NotificationBanner
+        complianceRules={complianceRules}
+        onNavigateToCompliance={() => setActiveTab("compliance")}
+        onNavigateToBku={() => setActiveTab("bku")}
+      />
+
       {/* Navigation Header */}
       <Header
         schoolInfo={schoolInfo}
@@ -137,6 +197,7 @@ export const App: React.FC = () => {
             onUpdateTransaction={handleUpdateTransaction}
             onDeleteTransaction={handleDeleteTransaction}
             onResetBku={handleResetBku}
+            onRestoreFullState={handleRestoreFullState}
           />
         )}
 

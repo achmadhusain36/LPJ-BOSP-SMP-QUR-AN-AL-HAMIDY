@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { BkuTransaction, SpendingCategory } from "../types/lpj";
 import { formatRupiah } from "../utils/lpjCalculations";
+import { ExcelImportModal } from "./ExcelImportModal";
+import { BackupRestoreModal } from "./BackupRestoreModal";
 import {
   Plus,
   Trash2,
@@ -12,6 +14,11 @@ import {
   X,
   FileSpreadsheet,
   RefreshCw,
+  Search,
+  Upload,
+  Database,
+  SlidersHorizontal,
+  Bookmark,
 } from "lucide-react";
 
 interface BkuManagerProps {
@@ -20,6 +27,7 @@ interface BkuManagerProps {
   onUpdateTransaction: (id: string, updated: Partial<BkuTransaction>) => void;
   onDeleteTransaction: (id: string) => void;
   onResetBku: () => void;
+  onRestoreFullState?: (data: any) => void;
 }
 
 export const BkuManager: React.FC<BkuManagerProps> = ({
@@ -28,10 +36,19 @@ export const BkuManager: React.FC<BkuManagerProps> = ({
   onUpdateTransaction,
   onDeleteTransaction,
   onResetBku,
+  onRestoreFullState,
 }) => {
   const [selectedMonth, setSelectedMonth] = useState<string>("semua");
   const [selectedCategory, setSelectedCategory] = useState<string>("semua");
+  const [selectedCashType, setSelectedCashType] = useState<string>("semua");
+  const [searchKeyword, setSearchKeyword] = useState<string>("");
+  const [minAmount, setMinAmount] = useState<string>("");
+  const [maxAmount, setMaxAmount] = useState<string>("");
+  const [isAdvancedFilterOpen, setIsAdvancedFilterOpen] = useState(false);
+
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isExcelModalOpen, setIsExcelModalOpen] = useState(false);
+  const [isBackupModalOpen, setIsBackupModalOpen] = useState(false);
   const [isAiPasteModalOpen, setIsAiPasteModalOpen] = useState(false);
   const [rawPastedText, setRawPastedText] = useState("");
   const [isParsing, setIsParsing] = useState(false);
@@ -62,12 +79,63 @@ export const BkuManager: React.FC<BkuManagerProps> = ({
     category: "barang_jasa",
   });
 
-  // Filter Logic
+  // Advanced Multi-Criteria Filter Logic
   const filteredTransactions = transactions.filter((tx) => {
+    // 1. Month match
     const monthMatch = selectedMonth === "semua" || tx.month === selectedMonth;
+
+    // 2. Category match
     const catMatch = selectedCategory === "semua" || tx.category === selectedCategory;
-    return monthMatch && catMatch;
+
+    // 3. Cash type match
+    const cashMatch = selectedCashType === "semua" || tx.cashType === selectedCashType;
+
+    // 4. Keyword search (proofNo, description, activityCode, accountCode)
+    const kw = searchKeyword.trim().toLowerCase();
+    const keywordMatch =
+      !kw ||
+      tx.proofNo.toLowerCase().includes(kw) ||
+      tx.description.toLowerCase().includes(kw) ||
+      tx.activityCode.toLowerCase().includes(kw) ||
+      tx.accountCode.toLowerCase().includes(kw);
+
+    // 5. Amount Range
+    const val = tx.expense > 0 ? tx.expense : tx.receipt;
+    const minVal = minAmount ? Number(minAmount) : 0;
+    const maxVal = maxAmount ? Number(maxAmount) : Infinity;
+    const amountMatch = val >= minVal && val <= maxVal;
+
+    return monthMatch && catMatch && cashMatch && keywordMatch && amountMatch;
   });
+
+  const activeFiltersCount =
+    (selectedMonth !== "semua" ? 1 : 0) +
+    (selectedCategory !== "semua" ? 1 : 0) +
+    (selectedCashType !== "semua" ? 1 : 0) +
+    (searchKeyword ? 1 : 0) +
+    (minAmount || maxAmount ? 1 : 0);
+
+  const resetAllFilters = () => {
+    setSelectedMonth("semua");
+    setSelectedCategory("semua");
+    setSelectedCashType("semua");
+    setSearchKeyword("");
+    setMinAmount("");
+    setMaxAmount("");
+  };
+
+  const handleApplyPreset = (preset: "large" | "honor" | "bank" | "modal") => {
+    resetAllFilters();
+    if (preset === "large") {
+      setMinAmount("1000000");
+    } else if (preset === "honor") {
+      setSelectedCategory("honor");
+    } else if (preset === "bank") {
+      setSelectedCashType("bank");
+    } else if (preset === "modal") {
+      setSelectedCategory("modal");
+    }
+  };
 
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -194,6 +262,22 @@ export const BkuManager: React.FC<BkuManagerProps> = ({
           </button>
 
           <button
+            onClick={() => setIsExcelModalOpen(true)}
+            className="bg-emerald-700 hover:bg-emerald-800 text-white px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-xs"
+          >
+            <Upload className="w-4 h-4" />
+            <span>Import Excel / CSV</span>
+          </button>
+
+          <button
+            onClick={() => setIsBackupModalOpen(true)}
+            className="bg-slate-800 hover:bg-slate-900 text-white px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-xs"
+          >
+            <Database className="w-4 h-4 text-emerald-400" />
+            <span>Backup / Restore</span>
+          </button>
+
+          <button
             onClick={() => setIsAiPasteModalOpen(true)}
             className="bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 px-3 py-2 rounded-lg text-xs font-medium flex items-center gap-1.5 transition"
           >
@@ -219,22 +303,38 @@ export const BkuManager: React.FC<BkuManagerProps> = ({
         </div>
       </div>
 
-      {/* Filter Bar */}
-      <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
-        <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-slate-500" />
-          <span className="font-bold text-slate-700">Filter Tampilan:</span>
-        </div>
+      {/* Advanced Filter Bar */}
+      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 text-xs">
+        {/* Search Input & Basic Selects */}
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+          {/* Keyword Search Input */}
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              placeholder="Cari kata kunci uraian, no bukti (KW-...), kode kegiatan/rekening..."
+              className="w-full pl-9 pr-8 py-2 bg-white border border-slate-300 rounded-lg text-xs font-medium focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-hidden"
+            />
+            {searchKeyword && (
+              <button
+                onClick={() => setSearchKeyword("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <div>
-            <label className="text-slate-500 mr-1.5 font-medium">Bulan:</label>
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Month Filter */}
             <select
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
-              className="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-blue-600 outline-hidden"
+              className="px-2.5 py-2 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-blue-600 outline-hidden"
             >
-              <option value="semua">Semua Bulan (Jan-Jun)</option>
+              <option value="semua">Semua Bulan</option>
               <option value="Januari">Januari</option>
               <option value="Februari">Februari</option>
               <option value="Maret">Maret</option>
@@ -242,26 +342,127 @@ export const BkuManager: React.FC<BkuManagerProps> = ({
               <option value="Mei">Mei</option>
               <option value="Juni">Juni</option>
             </select>
-          </div>
 
-          <div>
-            <label className="text-slate-500 mr-1.5 font-medium">Kategori:</label>
+            {/* Category Filter */}
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-blue-600 outline-hidden"
+              className="px-2.5 py-2 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-blue-600 outline-hidden"
             >
               <option value="semua">Semua Kategori</option>
-              <option value="barang_jasa">Barang & Jasa</option>
+              <option value="barang_jasa">Barang &amp; Jasa</option>
               <option value="honor">Honorarium PTK</option>
               <option value="modal">Belanja Modal Aset</option>
               <option value="transfer">Transfer Kas</option>
             </select>
+
+            {/* Cash Type Filter */}
+            <select
+              value={selectedCashType}
+              onChange={(e) => setSelectedCashType(e.target.value)}
+              className="px-2.5 py-2 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-blue-600 outline-hidden"
+            >
+              <option value="semua">Semua Kas</option>
+              <option value="tunai">Kas Tunai</option>
+              <option value="bank">Kas Bank</option>
+            </select>
+
+            {/* Toggle Advanced Filters (Amount Range) */}
+            <button
+              onClick={() => setIsAdvancedFilterOpen(!isAdvancedFilterOpen)}
+              className={`px-3 py-2 rounded-lg border font-semibold flex items-center gap-1.5 transition ${
+                isAdvancedFilterOpen || minAmount || maxAmount
+                  ? "bg-blue-50 border-blue-300 text-blue-700"
+                  : "bg-white border-slate-300 text-slate-700 hover:bg-slate-100"
+              }`}
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              <span>Rentang Nominal</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Collapsible Advanced Nominal Range & Presets */}
+        {isAdvancedFilterOpen && (
+          <div className="pt-3 border-t border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
+            {/* Amount Range inputs */}
+            <div className="flex items-center gap-2">
+              <span className="text-slate-600 font-semibold shrink-0">Rentang Transaksi (Rp):</span>
+              <input
+                type="number"
+                value={minAmount}
+                onChange={(e) => setMinAmount(e.target.value)}
+                placeholder="Min Rp 0"
+                className="w-28 px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs font-mono"
+              />
+              <span className="text-slate-400">s.d</span>
+              <input
+                type="number"
+                value={maxAmount}
+                onChange={(e) => setMaxAmount(e.target.value)}
+                placeholder="Maksimal Rp"
+                className="w-28 px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs font-mono"
+              />
+            </div>
+
+            {/* Quick Filter Presets */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-slate-500 font-semibold flex items-center gap-1 text-[11px]">
+                <Bookmark className="w-3 h-3 text-blue-600" /> Preset:
+              </span>
+              <button
+                type="button"
+                onClick={() => handleApplyPreset("large")}
+                className="px-2 py-1 bg-white border border-slate-300 rounded hover:bg-blue-50 hover:border-blue-300 text-[11px] font-medium text-slate-700"
+              >
+                &ge; Rp 1 Jt
+              </button>
+              <button
+                type="button"
+                onClick={() => handleApplyPreset("honor")}
+                className="px-2 py-1 bg-white border border-slate-300 rounded hover:bg-amber-50 hover:border-amber-300 text-[11px] font-medium text-slate-700"
+              >
+                Honor Non-ASN
+              </button>
+              <button
+                type="button"
+                onClick={() => handleApplyPreset("bank")}
+                className="px-2 py-1 bg-white border border-slate-300 rounded hover:bg-blue-50 hover:border-blue-300 text-[11px] font-medium text-slate-700"
+              >
+                Transaksi Bank
+              </button>
+              <button
+                type="button"
+                onClick={() => handleApplyPreset("modal")}
+                className="px-2 py-1 bg-white border border-slate-300 rounded hover:bg-blue-50 hover:border-blue-300 text-[11px] font-medium text-slate-700"
+              >
+                Belanja Modal
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Filter Summary Bar */}
+        <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">
+          <div className="flex items-center gap-2">
+            <span>
+              Menampilkan <strong>{filteredTransactions.length}</strong> dari {transactions.length} transaksi.
+            </span>
+            {activeFiltersCount > 0 && (
+              <span className="px-2 py-0.5 bg-blue-100 text-blue-800 font-bold rounded-full">
+                {activeFiltersCount} Filter Aktif
+              </span>
+            )}
           </div>
 
-          <span className="text-slate-500 font-mono text-[11px] bg-white px-2.5 py-1 rounded-lg border border-slate-200 font-medium">
-            {filteredTransactions.length} Transaksi Terfilter
-          </span>
+          {activeFiltersCount > 0 && (
+            <button
+              onClick={resetAllFilters}
+              className="text-blue-600 font-bold hover:underline flex items-center gap-1"
+            >
+              <X className="w-3 h-3" /> Reset Semua Filter
+            </button>
+          )}
         </div>
       </div>
 
@@ -515,6 +716,46 @@ export const BkuManager: React.FC<BkuManagerProps> = ({
           </div>
         </div>
       )}
+
+      {/* Excel & CSV Bulk Import Modal */}
+      <ExcelImportModal
+        isOpen={isExcelModalOpen}
+        onClose={() => setIsExcelModalOpen(false)}
+        existingTransactions={transactions}
+        onImportTransactions={(importedTxs) => {
+          importedTxs.forEach((tx) => onAddTransaction(tx));
+        }}
+      />
+
+      {/* Backup & Restore Full Database Modal */}
+      <BackupRestoreModal
+        isOpen={isBackupModalOpen}
+        onClose={() => setIsBackupModalOpen(false)}
+        schoolInfo={{
+          name: "SMP Quran Al-Hamidy Pringsewu",
+          npsn: "69987654",
+          address: "Jl. Lapangan Sepak Bola, Podomoro, Kab. Pringsewu, Lampung",
+          headmaster: "Ustadz M. Ridwan, M.Pd.",
+          headmasterNip: "19820512 200801 1 008",
+          treasurer: "Ahmad Fauzi, S.Pd.",
+          treasurerNip: "19880914 201202 1 003",
+          komite: "H. Abdullah Syukri",
+          phase: "Tahap 1 (Januari - Juni 2026)",
+          year: "2026",
+          studentCount: 180,
+          unitCostPerStudent: 1100000,
+        }}
+        transactions={transactions}
+        rkasItems={[]}
+        assets={[]}
+        denominations={[]}
+        checklistItems={[]}
+        onRestoreFullState={(data) => {
+          if (onRestoreFullState) {
+            onRestoreFullState(data);
+          }
+        }}
+      />
     </div>
   );
 };

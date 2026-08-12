@@ -2,6 +2,7 @@ import React from "react";
 import { SchoolInfo } from "../../types/lpj";
 import { DocumentHeader } from "./DocumentHeader";
 import { DocumentSignature } from "./DocumentSignature";
+import { DocVerificationStamp } from "./DocVerificationStamp";
 
 interface DocCoverProps {
   schoolInfo: SchoolInfo;
@@ -52,6 +53,9 @@ export const DocCover: React.FC<DocCoverProps> = ({ schoolInfo }) => {
         </p>
 
         <DocumentSignature schoolInfo={schoolInfo} dateStr="30 Juni 2026" showCommittee={true} />
+
+        {/* Verification Stamp with QR Code */}
+        <DocVerificationStamp schoolInfo={schoolInfo} />
       </div>
     </div>
   );
