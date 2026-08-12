@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { BkuTransaction, SpendingCategory } from "../types/lpj";
 import { formatRupiah } from "../utils/lpjCalculations";
 import {
@@ -62,12 +62,14 @@ export const BkuManager: React.FC<BkuManagerProps> = ({
     category: "barang_jasa",
   });
 
-  // Filter Logic
-  const filteredTransactions = transactions.filter((tx) => {
-    const monthMatch = selectedMonth === "semua" || tx.month === selectedMonth;
-    const catMatch = selectedCategory === "semua" || tx.category === selectedCategory;
-    return monthMatch && catMatch;
-  });
+  // OPTIMIZED: Memoize filtered transactions to avoid recalculation on every render
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter((tx) => {
+      const monthMatch = selectedMonth === "semua" || tx.month === selectedMonth;
+      const catMatch = selectedCategory === "semua" || tx.category === selectedCategory;
+      return monthMatch && catMatch;
+    });
+  }, [transactions, selectedMonth, selectedCategory]);
 
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,8 +95,8 @@ export const BkuManager: React.FC<BkuManagerProps> = ({
     });
   };
 
-  // Export BKU to CSV
-  const handleExportCsv = () => {
+  // OPTIMIZED: Use Blob API instead of data URI for large CSV exports
+  const handleExportCsv = useCallback(() => {
     const headers = [
       "No",
       "Tanggal",
@@ -109,29 +111,38 @@ export const BkuManager: React.FC<BkuManagerProps> = ({
       "Kategori",
     ];
 
-    const rows = transactions.map((tx, idx) => [
-      idx + 1,
-      `"${tx.date}"`,
-      `"${tx.month}"`,
-      `"${tx.proofNo}"`,
-      `"${tx.activityCode}"`,
-      `"${tx.accountCode}"`,
-      `"${tx.description.replace(/"/g, '""')}"`,
-      tx.receipt,
-      tx.expense,
-      tx.balance,
-      `"${tx.category}"`,
-    ]);
+    const csvLines = [headers.join(",")];
 
-    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
-    const encodedUri = encodeURI(csvContent);
+    // Build CSV line by line instead of one giant string
+    transactions.forEach((tx, idx) => {
+      const row = [
+        idx + 1,
+        `"${tx.date}"`,
+        `"${tx.month}"`,
+        `"${tx.proofNo}"`,
+        `"${tx.activityCode}"`,
+        `"${tx.accountCode}"`,
+        `"${tx.description.replace(/"/g, '""')}"`,
+        tx.receipt,
+        tx.expense,
+        tx.balance,
+        `"${tx.category}"`,
+      ];
+      csvLines.push(row.join(","));
+    });
+
+    // Use Blob API instead of data URI for better memory efficiency
+    const csvContent = csvLines.join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
+    link.setAttribute("href", url);
     link.setAttribute("download", `BKU_BOSP_SMP_Quran_AlHamidy_Tahap1_2026.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
+    URL.revokeObjectURL(url); // Free memory
+  }, [transactions]);
 
   // AI Parse Raw File / Text Paste
   const handleAiParse = async () => {
