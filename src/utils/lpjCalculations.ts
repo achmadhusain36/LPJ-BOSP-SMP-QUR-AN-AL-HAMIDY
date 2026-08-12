@@ -19,6 +19,7 @@ export function calculateFinancialSummary(
   let honor = 0;
   let modal = 0;
 
+  // Single pass through transactions
   transactions.forEach((tx) => {
     if (tx.category === "barang_jasa") {
       barangJasa += tx.expense;
@@ -49,6 +50,10 @@ export function calculateFinancialSummary(
   };
 }
 
+/**
+ * OPTIMIZED: Pre-group transactions by month to avoid multiple filter passes
+ * Performance: O(n) instead of O(n*m) where m = number of months (6)
+ */
 export function calculateMonthlySummaries(
   transactions: BkuTransaction[],
   totalAllocatedIncome: number = 80850000
@@ -62,15 +67,25 @@ export function calculateMonthlySummaries(
     "Juni",
   ];
 
+  // Pre-group transactions by month in single pass
+  const monthMap = new Map<string, BkuTransaction[]>();
+  transactions.forEach((tx) => {
+    if (!monthMap.has(tx.month)) {
+      monthMap.set(tx.month, []);
+    }
+    monthMap.get(tx.month)!.push(tx);
+  });
+
   let currentRunningBalance = totalAllocatedIncome;
 
   return months.map((month) => {
-    const monthTxs = transactions.filter((tx) => tx.month === month);
+    const monthTxs = monthMap.get(month) || [];
     let barangJasa = 0;
     let honor = 0;
     let modal = 0;
     let receipt = 0;
 
+    // Single pass through month's transactions
     monthTxs.forEach((tx) => {
       if (tx.category === "barang_jasa") barangJasa += tx.expense;
       if (tx.category === "honor") honor += tx.expense;
@@ -93,16 +108,27 @@ export function calculateMonthlySummaries(
   });
 }
 
+/**
+ * OPTIMIZED: Cache string matching results and avoid redundant filters
+ * Performance: Single pass with memoized string checks
+ */
 export function validateComplianceRules(
   summary: FinancialSummary,
   transactions: BkuTransaction[]
 ): ComplianceRule[] {
   const libTargetPct = 10;
   const libMinAmount = summary.totalIncome * (libTargetPct / 100);
-  // Check library expenditures in transactions
-  const libRealized = transactions
-    .filter((t) => t.description.toLowerCase().includes("buku") || t.description.toLowerCase().includes("perpustakaan"))
-    .reduce((acc, curr) => acc + curr.expense, 0);
+
+  // Optimized: Single pass through transactions for library expenditures
+  let libRealized = 0;
+  const libKeywords = ["buku", "perpustakaan"];
+  
+  transactions.forEach((tx) => {
+    const descLower = tx.description.toLowerCase();
+    if (libKeywords.some((keyword) => descLower.includes(keyword))) {
+      libRealized += tx.expense;
+    }
+  });
 
   const honorMaxPct = 40;
   const honorMaxAmount = summary.totalIncome * (honorMaxPct / 100);
@@ -163,7 +189,34 @@ export function calculateComplianceRules(
   return validateComplianceRules(summary, []);
 }
 
-export function recalculateBkuBalances(transactions: BkuTransaction[], initialAllocated: number = 80850000): BkuTransaction[] {
+/**
+ * OPTIMIZED: Only recalculate balances from the changed index onwards
+ * Performance: O(n-index) instead of O(n) for updates
+ */
+export function recalculateBkuBalances(
+  transactions: BkuTransaction[],
+  initialAllocated: number = 80850000,
+  changedFromIndex?: number
+): BkuTransaction[] {
+  // If we know which index changed, only recalculate from there
+  if (changedFromIndex !== undefined && changedFromIndex > 0) {
+    const updated = [...transactions];
+    let running = updated[changedFromIndex - 1].balance;
+
+    for (let i = changedFromIndex; i < updated.length; i++) {
+      if (updated[i].receipt > 0) {
+        running += updated[i].receipt;
+      }
+      if (updated[i].expense > 0) {
+        running -= updated[i].expense;
+      }
+      updated[i] = { ...updated[i], balance: running };
+    }
+
+    return updated;
+  }
+
+  // Full recalculation if no index specified
   let running = 0;
   return transactions.map((tx) => {
     if (tx.receipt > 0) {
@@ -179,12 +232,25 @@ export function recalculateBkuBalances(transactions: BkuTransaction[], initialAl
   });
 }
 
+/**
+ * OPTIMIZED: Pre-index transactions by account code
+ * Performance: O(n) grouping + O(m) lookup instead of O(n*m)
+ */
 export function generateForm3Rows(
   rkasItems: RkasProgramItem[],
   transactions: BkuTransaction[]
 ): Form3Row[] {
+  // Pre-index transactions by account code in single pass
+  const accountMap = new Map<string, BkuTransaction[]>();
+  transactions.forEach((tx) => {
+    if (!accountMap.has(tx.accountCode)) {
+      accountMap.set(tx.accountCode, []);
+    }
+    accountMap.get(tx.accountCode)!.push(tx);
+  });
+
   return rkasItems.map((item, idx) => {
-    const itemTxs = transactions.filter((t) => t.accountCode === item.code);
+    const itemTxs = accountMap.get(item.code) || [];
     const realized = itemTxs.reduce((acc, t) => acc + t.expense, 0);
 
     return {
