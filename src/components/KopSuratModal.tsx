@@ -3,19 +3,14 @@ import { SchoolInfo, LetterheadSettings } from "../types/lpj";
 import {
   Upload,
   X,
-  Trash2,
   CheckCircle2,
   AlertCircle,
   Image as ImageIcon,
   Sliders,
   RotateCcw,
   Sparkles,
-  Info,
   Maximize2,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  AlignJustify,
+  Info,
 } from "lucide-react";
 
 interface KopSuratModalProps {
@@ -34,16 +29,10 @@ export const KopSuratModal: React.FC<KopSuratModalProps> = ({
   const [letterheadImage, setLetterheadImage] = useState<string | undefined>(
     schoolInfo.letterheadImage || "/kop_smp_quran_alhamidy.svg"
   );
-  const [showOnLandscape, setShowOnLandscape] = useState<boolean>(
-    schoolInfo.showLetterheadOnLandscape || false
-  );
 
   const defaultSettings: LetterheadSettings = {
-    heightMm: 40,
-    scalePercent: 100,
-    marginTopMm: 10,
+    marginTopMm: 0,
     marginBottomMm: 8,
-    align: "center",
     borderStyle: "double",
   };
 
@@ -52,12 +41,6 @@ export const KopSuratModal: React.FC<KopSuratModalProps> = ({
   );
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [imageDetails, setImageDetails] = useState<{
-    width: number;
-    height: number;
-    lowRes: boolean;
-  } | null>(null);
-
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
@@ -89,17 +72,7 @@ export const KopSuratModal: React.FC<KopSuratModalProps> = ({
         setErrorMessage("Gagal membaca file gambar.");
         return;
       }
-
-      const img = new Image();
-      img.onload = () => {
-        const lowRes = img.width < 800 || img.height < 150;
-        setImageDetails({ width: img.width, height: img.height, lowRes });
-        setLetterheadImage(dataUrl);
-      };
-      img.onerror = () => {
-        setErrorMessage("File gambar rusak atau tidak dapat diproses.");
-      };
-      img.src = dataUrl;
+      setLetterheadImage(dataUrl);
     };
 
     reader.onerror = () => {
@@ -112,14 +85,11 @@ export const KopSuratModal: React.FC<KopSuratModalProps> = ({
   const handleResetDefault = () => {
     setLetterheadImage("/kop_smp_quran_alhamidy.svg");
     setSettings(defaultSettings);
-    setShowOnLandscape(false);
     setErrorMessage(null);
-    setImageDetails(null);
   };
 
   const handleRemoveImage = () => {
     setLetterheadImage(undefined);
-    setImageDetails(null);
     setErrorMessage(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -130,7 +100,7 @@ export const KopSuratModal: React.FC<KopSuratModalProps> = ({
     onSaveSchoolInfo({
       ...schoolInfo,
       letterheadImage: letterheadImage,
-      showLetterheadOnLandscape: showOnLandscape,
+      showLetterheadOnLandscape: false,
       letterheadSettings: settings,
     });
     onClose();
@@ -154,19 +124,19 @@ export const KopSuratModal: React.FC<KopSuratModalProps> = ({
             </div>
             <div>
               <h3 className="font-extrabold text-base tracking-wide flex items-center gap-2">
-                <span>Bilah Edit Kop Surat & Penyesuaian Kertas</span>
+                <span>Edit Kop Surat &amp; Penyesuaian Kertas LPJ</span>
                 <span className="bg-emerald-500/20 text-emerald-300 text-[10px] px-2 py-0.5 rounded border border-emerald-400/30">
-                  Resmi SMP Qur'an
+                  SMP Qur'an
                 </span>
               </h3>
               <p className="text-xs text-slate-400">
-                Atur ukuran, tinggi, margin, dan posisi kop surat agar presisi pada cetak A4
+                Logika otomatis: Kop mepet dari margin kiri ke kanan (170 mm) atau rata tengah jika tinggi &gt; 45 mm
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition"
+            className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -174,6 +144,18 @@ export const KopSuratModal: React.FC<KopSuratModalProps> = ({
 
         {/* Modal Body */}
         <div className="p-5 sm:p-6 space-y-5 text-xs text-slate-800 max-h-[80vh] overflow-y-auto">
+          {/* Information Notice */}
+          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-900 flex items-start gap-2.5">
+            <Info className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
+            <div className="space-y-0.5 leading-relaxed text-[11px]">
+              <strong className="font-bold text-emerald-950">Aturan Penataan Otomatis LPJ BOSP:</strong>
+              <p>
+                - <strong>Portrait</strong>: Lebar efektif 170 mm (A4 210mm dengan margin 20mm kiri-kanan). Gambar menempel penuh ke tepi. Jika tinggi &gt; 45 mm, otomatis di-skala ke 45 mm dan rata tengah simetris.<br />
+                - <strong>Landscape</strong>: Kop dikosongkan total agar tabel BKU &amp; Laporan muat penuh.
+              </p>
+            </div>
+          </div>
+
           {errorMessage && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-start gap-2">
               <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
@@ -189,7 +171,7 @@ export const KopSuratModal: React.FC<KopSuratModalProps> = ({
             <button
               type="button"
               onClick={handleResetDefault}
-              className={`p-3 rounded-xl border text-left transition flex flex-col justify-between ${
+              className={`p-3 rounded-xl border text-left transition flex flex-col justify-between cursor-pointer ${
                 letterheadImage === "/kop_smp_quran_alhamidy.svg"
                   ? "bg-emerald-50/80 border-emerald-600 ring-2 ring-emerald-600/20"
                   : "bg-slate-50 border-slate-200 hover:bg-slate-100"
@@ -206,7 +188,7 @@ export const KopSuratModal: React.FC<KopSuratModalProps> = ({
                   )}
                 </div>
                 <p className="text-[10.5px] text-slate-500 leading-snug">
-                  Kop surat banner warna resmi SMP Qur'an Al-Hamidy dengan logo & kontak lengkap.
+                  Kop surat banner warna resmi SMP Qur'an Al-Hamidy dengan logo &amp; kontak lengkap.
                 </p>
               </div>
               <span className="text-[10px] text-emerald-700 font-bold mt-2 inline-block">
@@ -252,7 +234,7 @@ export const KopSuratModal: React.FC<KopSuratModalProps> = ({
             <button
               type="button"
               onClick={handleRemoveImage}
-              className={`p-3 rounded-xl border text-left transition flex flex-col justify-between ${
+              className={`p-3 rounded-xl border text-left transition flex flex-col justify-between cursor-pointer ${
                 !letterheadImage
                   ? "bg-slate-200 border-slate-400 ring-2 ring-slate-400/20"
                   : "bg-slate-50 border-slate-200 hover:bg-slate-100"
@@ -267,7 +249,7 @@ export const KopSuratModal: React.FC<KopSuratModalProps> = ({
                   {!letterheadImage && <CheckCircle2 className="w-4 h-4 text-slate-700" />}
                 </div>
                 <p className="text-[10.5px] text-slate-500 leading-snug">
-                  Menggunakan teks instansi biasa tanpa gambar header.
+                  Menggunakan teks instansi biasa (rata kiri) tanpa gambar header.
                 </p>
               </div>
               <span className="text-[10px] text-slate-700 font-bold mt-2 inline-block">
@@ -276,88 +258,30 @@ export const KopSuratModal: React.FC<KopSuratModalProps> = ({
             </button>
           </div>
 
-          {/* BILAH EDIT KOP SURAT (TOOLBAR CONTROLS) */}
+          {/* MARGIN & BORDER CONTROLS */}
           <div className="bg-slate-50 p-4 sm:p-5 rounded-xl border border-slate-200 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-200 pb-2">
               <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-1.5">
                 <Sliders className="w-4 h-4 text-emerald-600" />
-                <span>Bilah Edit Kop Surat (Ukuran &amp; Margin Kertas)</span>
+                <span>Pengaturan Margin Kertas &amp; Garis Pemisah</span>
               </h4>
               <button
                 type="button"
                 onClick={() => setSettings(defaultSettings)}
-                className="text-[10.5px] text-slate-600 hover:text-slate-900 flex items-center gap-1 font-semibold underline"
+                className="text-[10.5px] text-slate-600 hover:text-slate-900 flex items-center gap-1 font-semibold underline cursor-pointer"
               >
                 <RotateCcw className="w-3 h-3" />
-                Reset Ukuran Default
+                Reset Ke Default
               </button>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Control 1: Height (Tinggi Kop in mm) */}
+              {/* Control 1: Margin Top (mm) */}
               <div className="space-y-1.5 bg-white p-3 rounded-lg border border-slate-200">
                 <div className="flex justify-between items-center text-slate-800 font-bold">
-                  <label className="text-xs">Tinggi Gambar Kop:</label>
-                  <span className="text-xs font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                    {settings.heightMm || 40} mm
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="20"
-                  max="70"
-                  step="1"
-                  value={settings.heightMm || 40}
-                  onChange={(e) =>
-                    setSettings((prev) => ({
-                      ...prev,
-                      heightMm: Number(e.target.value),
-                    }))
-                  }
-                  className="w-full accent-emerald-600 cursor-pointer"
-                />
-                <div className="flex justify-between text-[10px] text-slate-400 font-medium">
-                  <span>Kecil (20mm)</span>
-                  <span>Standar (40mm)</span>
-                  <span>Besar (70mm)</span>
-                </div>
-              </div>
-
-              {/* Control 2: Scale Percent (%) */}
-              <div className="space-y-1.5 bg-white p-3 rounded-lg border border-slate-200">
-                <div className="flex justify-between items-center text-slate-800 font-bold">
-                  <label className="text-xs">Skala / Perbesaran Lebar:</label>
-                  <span className="text-xs font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                    {settings.scalePercent || 100}%
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="60"
-                  max="130"
-                  step="2"
-                  value={settings.scalePercent || 100}
-                  onChange={(e) =>
-                    setSettings((prev) => ({
-                      ...prev,
-                      scalePercent: Number(e.target.value),
-                    }))
-                  }
-                  className="w-full accent-emerald-600 cursor-pointer"
-                />
-                <div className="flex justify-between text-[10px] text-slate-400 font-medium">
-                  <span>Compact (60%)</span>
-                  <span>Normal (100%)</span>
-                  <span>Lebar (130%)</span>
-                </div>
-              </div>
-
-              {/* Control 3: Margin Top (mm) */}
-              <div className="space-y-1.5 bg-white p-3 rounded-lg border border-slate-200">
-                <div className="flex justify-between items-center text-slate-800 font-bold">
-                  <label className="text-xs">Margin Atas Kertas:</label>
+                  <label className="text-xs">Margin Atas Kertas (Top):</label>
                   <span className="text-xs font-mono text-slate-700 bg-slate-100 px-2 py-0.5 rounded">
-                    {settings.marginTopMm ?? 10} mm
+                    {settings.marginTopMm ?? 0} mm
                   </span>
                 </div>
                 <input
@@ -365,7 +289,7 @@ export const KopSuratModal: React.FC<KopSuratModalProps> = ({
                   min="0"
                   max="30"
                   step="1"
-                  value={settings.marginTopMm ?? 10}
+                  value={settings.marginTopMm ?? 0}
                   onChange={(e) =>
                     setSettings((prev) => ({
                       ...prev,
@@ -375,16 +299,16 @@ export const KopSuratModal: React.FC<KopSuratModalProps> = ({
                   className="w-full accent-blue-600 cursor-pointer"
                 />
                 <div className="flex justify-between text-[10px] text-slate-400 font-medium">
-                  <span>Rapat (0mm)</span>
-                  <span>Standar (10mm)</span>
-                  <span>Longgar (30mm)</span>
+                  <span>0mm (Standar BOSP)</span>
+                  <span>10mm</span>
+                  <span>30mm</span>
                 </div>
               </div>
 
-              {/* Control 4: Margin Bottom (mm) */}
+              {/* Control 2: Margin Bottom (mm) */}
               <div className="space-y-1.5 bg-white p-3 rounded-lg border border-slate-200">
                 <div className="flex justify-between items-center text-slate-800 font-bold">
-                  <label className="text-xs">Margin Bawah Kop (Jarak Dokumen):</label>
+                  <label className="text-xs">Margin Bawah Kop (Ke Dokumen):</label>
                   <span className="text-xs font-mono text-slate-700 bg-slate-100 px-2 py-0.5 rounded">
                     {settings.marginBottomMm ?? 8} mm
                   </span>
@@ -404,74 +328,14 @@ export const KopSuratModal: React.FC<KopSuratModalProps> = ({
                   className="w-full accent-blue-600 cursor-pointer"
                 />
                 <div className="flex justify-between text-[10px] text-slate-400 font-medium">
-                  <span>Dekat (0mm)</span>
+                  <span>Rapat (0mm)</span>
                   <span>Standar (8mm)</span>
                   <span>Jauh (25mm)</span>
                 </div>
               </div>
 
-              {/* Control 5: Alignment */}
-              <div className="space-y-1.5 bg-white p-3 rounded-lg border border-slate-200">
-                <label className="block text-xs font-bold text-slate-800">
-                  Posisi Rata Kop:
-                </label>
-                <div className="grid grid-cols-4 gap-1.5 pt-0.5">
-                  <button
-                    type="button"
-                    onClick={() => setSettings((p) => ({ ...p, align: "left" }))}
-                    className={`py-1.5 px-2 rounded font-bold text-[11px] flex items-center justify-center gap-1 border ${
-                      settings.align === "left"
-                        ? "bg-emerald-600 text-white border-emerald-600"
-                        : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
-                    }`}
-                  >
-                    <AlignLeft className="w-3.5 h-3.5" />
-                    <span>Kiri</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setSettings((p) => ({ ...p, align: "center" }))}
-                    className={`py-1.5 px-2 rounded font-bold text-[11px] flex items-center justify-center gap-1 border ${
-                      settings.align === "center" || !settings.align
-                        ? "bg-emerald-600 text-white border-emerald-600"
-                        : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
-                    }`}
-                  >
-                    <AlignCenter className="w-3.5 h-3.5" />
-                    <span>Tengah</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setSettings((p) => ({ ...p, align: "right" }))}
-                    className={`py-1.5 px-2 rounded font-bold text-[11px] flex items-center justify-center gap-1 border ${
-                      settings.align === "right"
-                        ? "bg-emerald-600 text-white border-emerald-600"
-                        : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
-                    }`}
-                  >
-                    <AlignRight className="w-3.5 h-3.5" />
-                    <span>Kanan</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setSettings((p) => ({ ...p, align: "full" }))}
-                    className={`py-1.5 px-2 rounded font-bold text-[11px] flex items-center justify-center gap-1 border ${
-                      settings.align === "full"
-                        ? "bg-emerald-600 text-white border-emerald-600"
-                        : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
-                    }`}
-                  >
-                    <AlignJustify className="w-3.5 h-3.5" />
-                    <span>Penuh</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Control 6: Border Line Style */}
-              <div className="space-y-1.5 bg-white p-3 rounded-lg border border-slate-200">
+              {/* Control 3: Border Line Style */}
+              <div className="sm:col-span-2 space-y-1.5 bg-white p-3 rounded-lg border border-slate-200">
                 <label className="block text-xs font-bold text-slate-800">
                   Garis Pemisah Kop Surat:
                 </label>
@@ -499,10 +363,10 @@ export const KopSuratModal: React.FC<KopSuratModalProps> = ({
             <div className="flex items-center justify-between">
               <span className="font-extrabold text-slate-900 text-xs flex items-center gap-1.5">
                 <Maximize2 className="w-4 h-4 text-emerald-600" />
-                Pratinjau Hasil Cetak pada Kertas A4
+                Pratinjau Hasil Cetak Kertas A4 Portrait (Full Width 170 mm)
               </span>
               <span className="text-[10px] text-slate-500 italic">
-                A4 (210 mm × 297 mm) • Margin Samping 20 mm
+                A4 (210 mm × 297 mm) • Margin 20 mm
               </span>
             </div>
 
@@ -513,46 +377,28 @@ export const KopSuratModal: React.FC<KopSuratModalProps> = ({
                     borderClassMap[settings.borderStyle || "double"]
                   }`}
                   style={{
-                    marginTop: `${(settings.marginTopMm ?? 10) / 2}px`,
+                    marginTop: `${(settings.marginTopMm ?? 0) / 2}px`,
                     marginBottom: `${(settings.marginBottomMm ?? 8) / 2}px`,
                     paddingBottom: "2px",
                   }}
                 >
-                  <div
-                    className={`flex items-center w-full ${
-                      settings.align === "left"
-                        ? "justify-start"
-                        : settings.align === "right"
-                        ? "justify-end"
-                        : "justify-center"
-                    }`}
-                  >
+                  <div className="w-full">
                     {letterheadImage ? (
                       <img
                         src={letterheadImage}
                         alt="Preview Kop"
-                        style={{
-                          height: `${(settings.heightMm || 40) * 0.9}px`,
-                          width: settings.align === "full" ? "100%" : "auto",
-                          transform: `scale(${
-                            (settings.scalePercent || 100) / 100
-                          })`,
-                          transformOrigin:
-                            settings.align === "left"
-                              ? "left center"
-                              : settings.align === "right"
-                              ? "right center"
-                              : "center center",
-                          objectFit: "contain",
-                        }}
+                        className="w-full max-h-[45mm] object-fill block"
                       />
                     ) : (
-                      <div className="text-center py-2">
+                      <div className="text-left py-2 space-y-0.5">
                         <p className="font-bold text-xs uppercase text-slate-900">
                           {schoolInfo.name}
                         </p>
                         <p className="text-[10px] text-slate-600">
-                          NPSN: {schoolInfo.npsn} | {schoolInfo.address}
+                          {schoolInfo.address}, {schoolInfo.district}
+                        </p>
+                        <p className="text-[9px] text-slate-500 font-medium">
+                          NPSN: {schoolInfo.npsn} | Tahun Anggaran {schoolInfo.year}
                         </p>
                       </div>
                     )}
@@ -562,34 +408,13 @@ export const KopSuratModal: React.FC<KopSuratModalProps> = ({
                 {/* Content Simulation Placeholder */}
                 <div className="text-center py-3 border border-dashed border-slate-200 rounded bg-slate-50/50 mt-1">
                   <p className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">
-                    SURAT PERNYATAN TANGGUNG JAWAB UTAMA (SPTJM) BOSP
+                    SURAT PERNYATAAN TANGGUNG JAWAB UTAMA (SPTJM) BOSP
                   </p>
                   <p className="text-[9.5px] text-slate-400 mt-1">
                     [Area isi dokumen LPJ BOSP tercetak di bawah kop surat]
                   </p>
                 </div>
               </div>
-            </div>
-          </div>
-
-          {/* Landscape Toggle Option */}
-          <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
-            <div className="flex items-start gap-3">
-              <input
-                type="checkbox"
-                id="modalLandscapeToggle"
-                checked={showOnLandscape}
-                onChange={(e) => setShowOnLandscape(e.target.checked)}
-                className="mt-0.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-600 w-4 h-4"
-              />
-              <label htmlFor="modalLandscapeToggle" className="cursor-pointer space-y-0.5">
-                <span className="font-bold text-slate-900 block text-xs">
-                  Tampilkan gambar kop di halaman Landscape (Horizontal)?
-                </span>
-                <span className="text-[10.5px] text-slate-500 block leading-snug">
-                  Rekomendasi: <strong>TIDAK</strong>. Halaman landscape (BKU, Bank, Form 3, K7a) disarankan menggunakan header teks ringkas agar area tabel transaksi muat penuh.
-                </span>
-              </label>
             </div>
           </div>
         </div>
@@ -599,7 +424,7 @@ export const KopSuratModal: React.FC<KopSuratModalProps> = ({
           <button
             type="button"
             onClick={handleResetDefault}
-            className="px-3.5 py-2 border border-slate-300 rounded-lg text-slate-700 font-bold hover:bg-slate-100 transition text-xs flex items-center gap-1.5"
+            className="px-3.5 py-2 border border-slate-300 rounded-lg text-slate-700 font-bold hover:bg-slate-100 transition text-xs flex items-center gap-1.5 cursor-pointer"
           >
             <RotateCcw className="w-3.5 h-3.5 text-slate-600" />
             <span>Reset ke Default</span>
@@ -609,14 +434,14 @@ export const KopSuratModal: React.FC<KopSuratModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-slate-300 rounded-lg text-slate-700 font-bold hover:bg-slate-100 transition text-xs"
+              className="px-4 py-2 border border-slate-300 rounded-lg text-slate-700 font-bold hover:bg-slate-100 transition text-xs cursor-pointer"
             >
               Batal
             </button>
             <button
               type="button"
               onClick={handleSave}
-              className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold flex items-center gap-2 shadow-xs transition text-xs"
+              className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold flex items-center gap-2 shadow-xs transition text-xs cursor-pointer"
             >
               <CheckCircle2 className="w-4 h-4" />
               <span>Simpan &amp; Terapkan Ke Kertas</span>
@@ -627,3 +452,4 @@ export const KopSuratModal: React.FC<KopSuratModalProps> = ({
     </div>
   );
 };
+

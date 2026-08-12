@@ -8,15 +8,11 @@ import {
   CheckCircle2,
   AlertCircle,
   Image as ImageIcon,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  AlignJustify,
   Maximize2,
   ChevronDown,
   ChevronUp,
-  X,
   FileCheck2,
+  Info,
 } from "lucide-react";
 
 interface HeaderEditorProps {
@@ -37,12 +33,8 @@ export const HeaderEditor: React.FC<HeaderEditorProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const defaultSettings: LetterheadSettings = {
-    heightMm: 40,
-    scalePercent: 100,
-    marginTopMm: 10,
+    marginTopMm: 0,
     marginBottomMm: 8,
-    horizontalMarginMm: 0,
-    align: "center",
     borderStyle: "double",
   };
 
@@ -50,9 +42,6 @@ export const HeaderEditor: React.FC<HeaderEditorProps> = ({
     ...defaultSettings,
     ...schoolInfo.letterheadSettings,
   };
-
-  const letterheadImage = schoolInfo.letterheadImage || "/kop_smp_quran_alhamidy.svg";
-  const showOnLandscape = Boolean(schoolInfo.showLetterheadOnLandscape);
 
   const updateSettings = (newSettings: Partial<LetterheadSettings>) => {
     onUpdateSchoolInfo({
@@ -130,13 +119,13 @@ export const HeaderEditor: React.FC<HeaderEditorProps> = ({
           </div>
           <div>
             <h3 className="font-extrabold text-sm sm:text-base tracking-wide text-white flex items-center gap-2 flex-wrap">
-              <span>Bilah Edit Kop Surat &amp; Tata Letak Kertas A4</span>
+              <span>Bilah Pengaturan Kop Surat A4</span>
               <span className="bg-emerald-500/20 text-emerald-300 text-[10px] px-2 py-0.5 rounded border border-emerald-400/30 font-bold">
-                Presisi LPJ BOSP
+                Otomatis Full Width 170mm
               </span>
             </h3>
             <p className="text-xs text-slate-400">
-              Unggah kop sekolah, sesuaikan margin atas/bawah/samping, dan skala gambar secara presisi
+              Pengaturan otomatis presisi LPJ BOSP: Gambar menempel penuh ke margin (170mm) atau rata tengah jika tinggi &gt; 45mm.
             </p>
           </div>
         </div>
@@ -156,6 +145,19 @@ export const HeaderEditor: React.FC<HeaderEditorProps> = ({
       {/* Editor Content Body */}
       {isExpanded && (
         <div className="p-4 sm:p-6 space-y-6 text-xs bg-slate-900">
+          {/* Automatic Layout Rule Explanation Banner */}
+          <div className="p-3.5 bg-emerald-950/60 border border-emerald-800/80 rounded-xl text-emerald-200 flex items-start gap-2.5">
+            <Info className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+            <div className="space-y-1 text-emerald-100">
+              <strong className="font-bold text-white block">Aturan Otomatis Presisi LPJ BOSP:</strong>
+              <p className="text-[11px] leading-relaxed text-emerald-200/90">
+                1. <strong>Halaman Portrait</strong>: Gambar kop otomatis melebar penuh (170 mm) dari margin kiri ke kanan. Jika tinggi asli &gt; 45 mm, otomatis di-skala ke 45 mm &amp; diposisikan rata tengah simetris.<br />
+                2. <strong>Halaman Landscape</strong>: Header/kop surat dikosongkan total agar tabel BKU &amp; Rekonsiliasi muat dari paling atas.<br />
+                3. <strong>Tanpa Gambar</strong>: Menggunakan teks header instansi standar (rata kiri).
+              </p>
+            </div>
+          </div>
+
           {/* Error Alert */}
           {errorMessage && (
             <div className="p-3 bg-red-900/50 border border-red-700 rounded-xl text-red-200 flex items-start gap-2">
@@ -255,7 +257,7 @@ export const HeaderEditor: React.FC<HeaderEditorProps> = ({
                   )}
                 </div>
                 <p className="text-[10.5px] text-slate-400 leading-relaxed">
-                  Menggunakan teks instansi biasa tanpa file gambar header.
+                  Menggunakan teks instansi biasa tanpa file gambar header (rata kiri).
                 </p>
               </div>
               <span className="text-[10px] text-slate-300 font-bold mt-2">
@@ -269,7 +271,7 @@ export const HeaderEditor: React.FC<HeaderEditorProps> = ({
             <div className="flex items-center justify-between border-b border-slate-700 pb-2">
               <h4 className="font-extrabold text-white text-xs uppercase tracking-wider flex items-center gap-2">
                 <Sliders className="w-4 h-4 text-emerald-400" />
-                <span>Pengaturan Skala &amp; Margin Kertas (MM)</span>
+                <span>Pengaturan Margin Kertas A4 &amp; Garis Pemisah</span>
               </h4>
               <button
                 type="button"
@@ -277,71 +279,19 @@ export const HeaderEditor: React.FC<HeaderEditorProps> = ({
                 className="text-[10.5px] text-slate-400 hover:text-white flex items-center gap-1 font-semibold underline"
               >
                 <RotateCcw className="w-3 h-3" />
-                Reset ke Standar
+                Reset Ke Default
               </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* Slider 1: Height (Tinggi Kop in mm) */}
-              <div className="bg-slate-900/80 p-3 rounded-lg border border-slate-700 space-y-1.5">
-                <div className="flex justify-between items-center">
-                  <label className="text-xs font-bold text-slate-200">
-                    Tinggi Gambar Kop:
-                  </label>
-                  <span className="font-mono text-emerald-300 font-bold bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800 text-xs">
-                    {settings.heightMm ?? 40} mm
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="20"
-                  max="70"
-                  step="1"
-                  value={settings.heightMm ?? 40}
-                  onChange={(e) => updateSettings({ heightMm: Number(e.target.value) })}
-                  className="w-full accent-emerald-500 cursor-pointer"
-                />
-                <div className="flex justify-between text-[9.5px] text-slate-400">
-                  <span>20mm</span>
-                  <span>40mm (Default)</span>
-                  <span>70mm</span>
-                </div>
-              </div>
-
-              {/* Slider 2: Scale Percent (%) */}
-              <div className="bg-slate-900/80 p-3 rounded-lg border border-slate-700 space-y-1.5">
-                <div className="flex justify-between items-center">
-                  <label className="text-xs font-bold text-slate-200">
-                    Skala Perbesaran Lebar:
-                  </label>
-                  <span className="font-mono text-emerald-300 font-bold bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800 text-xs">
-                    {settings.scalePercent ?? 100}%
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="50"
-                  max="130"
-                  step="2"
-                  value={settings.scalePercent ?? 100}
-                  onChange={(e) => updateSettings({ scalePercent: Number(e.target.value) })}
-                  className="w-full accent-emerald-500 cursor-pointer"
-                />
-                <div className="flex justify-between text-[9.5px] text-slate-400">
-                  <span>50%</span>
-                  <span>100% (Pas)</span>
-                  <span>130%</span>
-                </div>
-              </div>
-
-              {/* Slider 3: Vertical Top Margin (Margin Atas Kertas) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Slider 1: Vertical Top Margin (Margin Atas Kertas) */}
               <div className="bg-slate-900/80 p-3 rounded-lg border border-slate-700 space-y-1.5">
                 <div className="flex justify-between items-center">
                   <label className="text-xs font-bold text-slate-200">
                     Margin Atas Kertas (Top):
                   </label>
                   <span className="font-mono text-blue-300 font-bold bg-blue-950 px-2 py-0.5 rounded border border-blue-800 text-xs">
-                    {settings.marginTopMm ?? 10} mm
+                    {settings.marginTopMm ?? 0} mm
                   </span>
                 </div>
                 <input
@@ -349,22 +299,22 @@ export const HeaderEditor: React.FC<HeaderEditorProps> = ({
                   min="0"
                   max="35"
                   step="1"
-                  value={settings.marginTopMm ?? 10}
+                  value={settings.marginTopMm ?? 0}
                   onChange={(e) => updateSettings({ marginTopMm: Number(e.target.value) })}
                   className="w-full accent-blue-500 cursor-pointer"
                 />
                 <div className="flex justify-between text-[9.5px] text-slate-400">
-                  <span>0mm (Rapat)</span>
-                  <span>10mm (Standar)</span>
+                  <span>0mm (Standar BOSP)</span>
+                  <span>10mm</span>
                   <span>35mm</span>
                 </div>
               </div>
 
-              {/* Slider 4: Vertical Bottom Margin (Jarak Kop ke Isi Dokumen) */}
+              {/* Slider 2: Vertical Bottom Margin (Jarak Kop ke Isi Dokumen) */}
               <div className="bg-slate-900/80 p-3 rounded-lg border border-slate-700 space-y-1.5">
                 <div className="flex justify-between items-center">
                   <label className="text-xs font-bold text-slate-200">
-                    Margin Bawah Kop (Bottom):
+                    Margin Bawah Kop (Ke Dokumen):
                   </label>
                   <span className="font-mono text-blue-300 font-bold bg-blue-950 px-2 py-0.5 rounded border border-blue-800 text-xs">
                     {settings.marginBottomMm ?? 8} mm
@@ -380,134 +330,29 @@ export const HeaderEditor: React.FC<HeaderEditorProps> = ({
                   className="w-full accent-blue-500 cursor-pointer"
                 />
                 <div className="flex justify-between text-[9.5px] text-slate-400">
-                  <span>0mm (Dekat)</span>
+                  <span>0mm (Rapat)</span>
                   <span>8mm (Standar)</span>
                   <span>30mm</span>
-                </div>
-              </div>
-
-              {/* Slider 5: Horizontal Margin (Margin Samping Kiri/Kanan) */}
-              <div className="bg-slate-900/80 p-3 rounded-lg border border-slate-700 space-y-1.5">
-                <div className="flex justify-between items-center">
-                  <label className="text-xs font-bold text-slate-200">
-                    Margin Samping Kiri/Kanan:
-                  </label>
-                  <span className="font-mono text-amber-300 font-bold bg-amber-950 px-2 py-0.5 rounded border border-amber-800 text-xs">
-                    {settings.horizontalMarginMm ?? 0} mm
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="40"
-                  step="1"
-                  value={settings.horizontalMarginMm ?? 0}
-                  onChange={(e) => updateSettings({ horizontalMarginMm: Number(e.target.value) })}
-                  className="w-full accent-amber-500 cursor-pointer"
-                />
-                <div className="flex justify-between text-[9.5px] text-slate-400">
-                  <span>0mm (Penuh)</span>
-                  <span>20mm</span>
-                  <span>40mm</span>
-                </div>
-              </div>
-
-              {/* Control 6: Alignment */}
-              <div className="bg-slate-900/80 p-3 rounded-lg border border-slate-700 space-y-1.5">
-                <label className="block text-xs font-bold text-slate-200">
-                  Posisi Rata Kop Surat:
-                </label>
-                <div className="grid grid-cols-4 gap-1 pt-1">
-                  <button
-                    type="button"
-                    onClick={() => updateSettings({ align: "left" })}
-                    className={`py-1 px-1.5 rounded font-bold text-[10.5px] flex items-center justify-center gap-1 border ${
-                      settings.align === "left"
-                        ? "bg-emerald-600 text-white border-emerald-500"
-                        : "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700"
-                    }`}
-                  >
-                    <AlignLeft className="w-3 h-3" />
-                    <span>Kiri</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => updateSettings({ align: "center" })}
-                    className={`py-1 px-1.5 rounded font-bold text-[10.5px] flex items-center justify-center gap-1 border ${
-                      settings.align === "center" || !settings.align
-                        ? "bg-emerald-600 text-white border-emerald-500"
-                        : "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700"
-                    }`}
-                  >
-                    <AlignCenter className="w-3 h-3" />
-                    <span>Tengah</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => updateSettings({ align: "right" })}
-                    className={`py-1 px-1.5 rounded font-bold text-[10.5px] flex items-center justify-center gap-1 border ${
-                      settings.align === "right"
-                        ? "bg-emerald-600 text-white border-emerald-500"
-                        : "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700"
-                    }`}
-                  >
-                    <AlignRight className="w-3 h-3" />
-                    <span>Kanan</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => updateSettings({ align: "full" })}
-                    className={`py-1 px-1.5 rounded font-bold text-[10.5px] flex items-center justify-center gap-1 border ${
-                      settings.align === "full"
-                        ? "bg-emerald-600 text-white border-emerald-500"
-                        : "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700"
-                    }`}
-                  >
-                    <AlignJustify className="w-3 h-3" />
-                    <span>Penuh</span>
-                  </button>
                 </div>
               </div>
             </div>
 
             {/* Line Border Style Select */}
             <div className="pt-2 border-t border-slate-700 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 w-full sm:w-auto">
                 <label className="font-bold text-slate-300 text-xs shrink-0">
                   Garis Bawah Pemisah Kop:
                 </label>
                 <select
                   value={settings.borderStyle || "double"}
                   onChange={(e) => updateSettings({ borderStyle: e.target.value as any })}
-                  className="bg-slate-900 text-white border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 outline-hidden"
+                  className="bg-slate-900 text-white border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 outline-hidden w-full sm:w-auto"
                 >
                   <option value="double">Garis Ganda Hitam (Double Line - Standar BOSP)</option>
                   <option value="solid">Garis Solid Hitam Single</option>
                   <option value="emerald">Garis Hijau Emerald (Tema Sekolah)</option>
                   <option value="none">Tanpa Garis Pemisah (Polos)</option>
                 </select>
-              </div>
-
-              {/* Checkbox for Landscape */}
-              <div className="flex items-center gap-2 bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-700">
-                <input
-                  type="checkbox"
-                  id="headerEditorLandscapeCheck"
-                  checked={showOnLandscape}
-                  onChange={(e) =>
-                    onUpdateSchoolInfo({
-                      ...schoolInfo,
-                      showLetterheadOnLandscape: e.target.checked,
-                    })
-                  }
-                  className="rounded border-slate-600 text-emerald-500 focus:ring-emerald-500 w-3.5 h-3.5 cursor-pointer"
-                />
-                <label
-                  htmlFor="headerEditorLandscapeCheck"
-                  className="text-slate-300 text-[11px] font-semibold cursor-pointer"
-                >
-                  Tampilkan gambar kop pada dokumen Landscape (Horizontal)
-                </label>
               </div>
             </div>
           </div>
@@ -517,7 +362,7 @@ export const HeaderEditor: React.FC<HeaderEditorProps> = ({
             <div className="flex items-center justify-between">
               <span className="font-extrabold text-white text-xs flex items-center gap-2">
                 <Maximize2 className="w-4 h-4 text-emerald-400" />
-                Simulasi Pratinjau Kertas A4 (210 × 297 mm)
+                Simulasi Pratinjau Kertas A4 Portrait (170mm Lebar Efektif)
               </span>
               <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
                 <FileCheck2 className="w-3.5 h-3.5" />
@@ -533,48 +378,28 @@ export const HeaderEditor: React.FC<HeaderEditorProps> = ({
                     borderClassMap[settings.borderStyle || "double"]
                   }`}
                   style={{
-                    marginTop: `${(settings.marginTopMm ?? 10) / 2}px`,
+                    marginTop: `${(settings.marginTopMm ?? 0) / 2}px`,
                     marginBottom: `${(settings.marginBottomMm ?? 8) / 2}px`,
-                    paddingLeft: `${(settings.horizontalMarginMm ?? 0) / 2}px`,
-                    paddingRight: `${(settings.horizontalMarginMm ?? 0) / 2}px`,
                     paddingBottom: "3px",
                   }}
                 >
-                  <div
-                    className={`flex items-center w-full ${
-                      settings.align === "left"
-                        ? "justify-start"
-                        : settings.align === "right"
-                        ? "justify-end"
-                        : "justify-center"
-                    }`}
-                  >
+                  <div className="w-full">
                     {schoolInfo.letterheadImage ? (
                       <img
                         src={schoolInfo.letterheadImage}
                         alt="Preview Kop"
-                        style={{
-                          height: `${(settings.heightMm || 40) * 0.9}px`,
-                          width: settings.align === "full" ? "100%" : "auto",
-                          transform: `scale(${
-                            (settings.scalePercent || 100) / 100
-                          })`,
-                          transformOrigin:
-                            settings.align === "left"
-                              ? "left center"
-                              : settings.align === "right"
-                              ? "right center"
-                              : "center center",
-                          objectFit: "contain",
-                        }}
+                        className="w-full max-h-[45mm] object-fill block"
                       />
                     ) : (
-                      <div className="text-center py-2">
-                        <p className="font-extrabold text-xs uppercase text-slate-900">
+                      <div className="text-left py-2 space-y-0.5">
+                        <p className="font-extrabold text-sm uppercase text-slate-900">
                           {schoolInfo.name}
                         </p>
-                        <p className="text-[10px] text-slate-600 font-medium">
-                          NPSN: {schoolInfo.npsn} | {schoolInfo.address}
+                        <p className="text-xs text-slate-700">
+                          {schoolInfo.address}, {schoolInfo.district}, {schoolInfo.regency}
+                        </p>
+                        <p className="text-[11px] font-semibold text-slate-600">
+                          NPSN: {schoolInfo.npsn} | Tahun Anggaran {schoolInfo.year}
                         </p>
                       </div>
                     )}
@@ -601,3 +426,4 @@ export const HeaderEditor: React.FC<HeaderEditorProps> = ({
     </div>
   );
 };
+

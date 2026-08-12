@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState } from "react";
 import { BkuTransaction, SpendingCategory } from "../types/lpj";
 import { formatRupiah } from "../utils/lpjCalculations";
 import {
@@ -62,14 +62,12 @@ export const BkuManager: React.FC<BkuManagerProps> = ({
     category: "barang_jasa",
   });
 
-  // OPTIMIZED: Memoize filtered transactions to avoid recalculation on every render
-  const filteredTransactions = useMemo(() => {
-    return transactions.filter((tx) => {
-      const monthMatch = selectedMonth === "semua" || tx.month === selectedMonth;
-      const catMatch = selectedCategory === "semua" || tx.category === selectedCategory;
-      return monthMatch && catMatch;
-    });
-  }, [transactions, selectedMonth, selectedCategory]);
+  // Filter Logic
+  const filteredTransactions = transactions.filter((tx) => {
+    const monthMatch = selectedMonth === "semua" || tx.month === selectedMonth;
+    const catMatch = selectedCategory === "semua" || tx.category === selectedCategory;
+    return monthMatch && catMatch;
+  });
 
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,8 +93,8 @@ export const BkuManager: React.FC<BkuManagerProps> = ({
     });
   };
 
-  // OPTIMIZED: Use Blob API instead of data URI for large CSV exports
-  const handleExportCsv = useCallback(() => {
+  // Export BKU to CSV
+  const handleExportCsv = () => {
     const headers = [
       "No",
       "Tanggal",
@@ -111,38 +109,29 @@ export const BkuManager: React.FC<BkuManagerProps> = ({
       "Kategori",
     ];
 
-    const csvLines = [headers.join(",")];
+    const rows = transactions.map((tx, idx) => [
+      idx + 1,
+      `"${tx.date}"`,
+      `"${tx.month}"`,
+      `"${tx.proofNo}"`,
+      `"${tx.activityCode}"`,
+      `"${tx.accountCode}"`,
+      `"${tx.description.replace(/"/g, '""')}"`,
+      tx.receipt,
+      tx.expense,
+      tx.balance,
+      `"${tx.category}"`,
+    ]);
 
-    // Build CSV line by line instead of one giant string
-    transactions.forEach((tx, idx) => {
-      const row = [
-        idx + 1,
-        `"${tx.date}"`,
-        `"${tx.month}"`,
-        `"${tx.proofNo}"`,
-        `"${tx.activityCode}"`,
-        `"${tx.accountCode}"`,
-        `"${tx.description.replace(/"/g, '""')}"`,
-        tx.receipt,
-        tx.expense,
-        tx.balance,
-        `"${tx.category}"`,
-      ];
-      csvLines.push(row.join(","));
-    });
-
-    // Use Blob API instead of data URI for better memory efficiency
-    const csvContent = csvLines.join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
+    const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
-    link.setAttribute("href", url);
+    link.setAttribute("href", encodedUri);
     link.setAttribute("download", `BKU_BOSP_SMP_Quran_AlHamidy_Tahap1_2026.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    URL.revokeObjectURL(url); // Free memory
-  }, [transactions]);
+  };
 
   // AI Parse Raw File / Text Paste
   const handleAiParse = async () => {

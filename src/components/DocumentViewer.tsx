@@ -15,21 +15,30 @@ import {
   recalculateBkuBalances,
   formatRupiah,
 } from "../utils/lpjCalculations";
+import { DocCover } from "./documents/DocCover";
+import { DocSuratPengantar } from "./documents/DocSuratPengantar";
+import { DocNarasiLpj } from "./documents/DocNarasiLpj";
+import { DocSptjm } from "./documents/DocSptjm";
+import { DocRkasTriwulan } from "./documents/DocRkasTriwulan";
 import { DocBkuK3 } from "./documents/DocBkuK3";
 import { DocBankK5 } from "./documents/DocBankK5";
 import { DocPajakK6 } from "./documents/DocPajakK6";
-import { DocRekapPajakNihil } from "./documents/DocRekapPajakNihil";
 import { DocRealisasiK7a } from "./documents/DocRealisasiK7a";
+import { DocRekeningKoran } from "./documents/DocRekeningKoran";
 import { DocPenutupanKasK7b } from "./documents/DocPenutupanKasK7b";
 import { DocBAPemeriksaanKasK7c } from "./documents/DocBAPemeriksaanKasK7c";
+import { DocSkTim } from "./documents/DocSkTim";
+import { DocBuktiKasPengeluaran } from "./documents/DocBuktiKasPengeluaran";
+import { DocDaftarHonor } from "./documents/DocDaftarHonor";
+import { DocDokumentasiFoto } from "./documents/DocDokumentasiFoto";
 import { DocAsetForm09 } from "./documents/DocAsetForm09";
-import { DocRekeningKoran } from "./documents/DocRekeningKoran";
+import { DocRekapPajakNihil } from "./documents/DocRekapPajakNihil";
 import { DocForm3Rekon } from "./documents/DocForm3Rekon";
 import { DocChecklist28 } from "./documents/DocChecklist28";
 import { DocFullBundle } from "./documents/DocFullBundle";
 import { KopSuratModal } from "./KopSuratModal";
 import { HeaderEditor } from "./HeaderEditor";
-import { Printer, FileText, Layers, Filter, RefreshCw, Calendar, Clock, Image as ImageIcon, Sliders, RotateCcw, Settings } from "lucide-react";
+import { Printer, FileText, Layers, Filter, RefreshCw, Calendar, Clock, Image as ImageIcon, Sliders } from "lucide-react";
 
 interface DocumentViewerProps {
   schoolInfo: SchoolInfo;
@@ -45,17 +54,25 @@ interface DocumentViewerProps {
 
 export type DocumentType =
   | "BUNDLE_ALL"
-  | "CHECKLIST28"
-  | "K3_BKU"
-  | "REV_FORM3"
-  | "K7A_REALISASI"
-  | "K7B_REGISTER"
-  | "K7C_BA_KAS"
-  | "K5_BANK"
-  | "K6_PAJAK"
-  | "PAJAK_NIHIL"
-  | "FORM09_BMD"
-  | "REK_KORAN";
+  | "DOC_1_COVER"
+  | "DOC_2_PENGANTAR"
+  | "DOC_3_4_5_NARASI"
+  | "DOC_6_SPTJM"
+  | "DOC_7_RKAS_TRIWULAN"
+  | "DOC_8_BKU"
+  | "DOC_9_BANK"
+  | "DOC_10_PAJAK"
+  | "DOC_11_REALISASI_K7A"
+  | "DOC_12_REK_KORAN"
+  | "DOC_13_PENUTUPAN_KAS_K7B"
+  | "DOC_14_BA_KAS_K7C"
+  | "DOC_15_SK_TIM"
+  | "DOC_16_BUKTI_KAS_BPU"
+  | "DOC_17_HONOR"
+  | "DOC_18_DOKUMENTASI"
+  | "DOC_19_ASET_FORM09"
+  | "FORM3_REKON"
+  | "CHECKLIST28";
 
 export const DocumentViewer: React.FC<DocumentViewerProps> = (props) => {
   const [selectedDoc, setSelectedDoc] = useState<DocumentType>("BUNDLE_ALL");
@@ -211,18 +228,26 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = (props) => {
   };
 
   const docTitles: Record<DocumentType, string> = {
-    BUNDLE_ALL: "Paket Lengkap LPJ (Semua 11 Dokumen + Cover)",
-    CHECKLIST28: "1. Checklist 28 Instrumen Kelengkapan",
-    K3_BKU: "2. Buku Kas Umum (BKU / Form K3)",
-    REV_FORM3: "3. Form 3 Belanja dan Rekonsiliasi",
-    K7A_REALISASI: "4. Rekapitulasi Realisasi Belanja (Form K7a)",
-    K7B_REGISTER: "5. Register Penutupan Kas (Form K7b)",
-    K7C_BA_KAS: "6. Berita Acara Pemeriksaan Kas (Form K7c)",
-    K5_BANK: "7. Buku Bantu Bank (Form K5)",
-    K6_PAJAK: "8. Buku Bantu Pajak (Form K6)",
-    PAJAK_NIHIL: "9. Surat Pernyataan & Rekap Pajak Nihil",
-    FORM09_BMD: "10. Rekap Pembelian Aset BMD (Form 09)",
-    REK_KORAN: "11. Simulasi Cetak Rekening Koran Bank",
+    BUNDLE_ALL: "📦 BUNDEL URUTAN RESMI LPJ (19 DOKUMEN LENGKAP SIAP CETAK)",
+    DOC_1_COVER: "1. Cover / Sampul LPJ",
+    DOC_2_PENGANTAR: "2. Surat Pengantar (Tim BOSP Pringsewu)",
+    DOC_3_4_5_NARASI: "3-5. Pendahuluan, Pelaksanaan & Permasalahan",
+    DOC_6_SPTJM: "6. Surat Pernyataan Tanggung Jawab Mutlak (SPTJM)",
+    DOC_7_RKAS_TRIWULAN: "7. RKAS Per Triwulan (Triwulan I-IV)",
+    DOC_8_BKU: "8. Buku Kas Umum (BKU Per Bulan)",
+    DOC_9_BANK: "9. Buku Pembantu Bank Per Bulan",
+    DOC_10_PAJAK: "10. Buku Bantu Pajak Per Bulan",
+    DOC_11_REALISASI_K7A: "11. Rekap Realisasi 1 Tahap (Form K7a)",
+    DOC_12_REK_KORAN: "12. Rekening Koran / Surat Pernyataan",
+    DOC_13_PENUTUPAN_KAS_K7B: "13. Register Penutupan Kas (Form K7b)",
+    DOC_14_BA_KAS_K7C: "14. Berita Acara Penutupan Kas (Form K7c)",
+    DOC_15_SK_TIM: "15. SK Tim BOSP, Pengadaan & PPHP",
+    DOC_16_BUKTI_KAS_BPU: "16. Bukti Kas Pengeluaran (BPU C5)",
+    DOC_17_HONOR: "17. Daftar Honorarium Guru & Tendik",
+    DOC_18_DOKUMENTASI: "18. Dokumentasi Pembelanjaan Urut BKU",
+    DOC_19_ASET_FORM09: "19. Rekap Pembelian Barang Aset (Form 09 BMD)",
+    FORM3_REKON: "Form 3 Belanja dan Rekonsiliasi (BOSP)",
+    CHECKLIST28: "Checklist 28 Instrumen Kelengkapan",
   };
 
   const isFiltered =
@@ -249,10 +274,10 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = (props) => {
           </div>
           <div>
             <h2 className="text-base font-bold text-slate-900">
-              Dokumen Kelengkapan LPJ BOSP
+              Dokumen Kelengkapan LPJ BOSP (19 Berkas Resm)
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Pilih jenis dokumen dan filter periode (Bulan, Triwulan, Tahapan) untuk pratinjau & cetak PDF.
+              Pilih dokumen atau cetak Bundel Urutan Resmi (1 s.d. 19) langsung ke kertas A4.
             </p>
           </div>
         </div>
@@ -261,38 +286,46 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = (props) => {
           <select
             value={selectedDoc}
             onChange={(e) => setSelectedDoc(e.target.value as DocumentType)}
-            className="px-3.5 py-2 bg-slate-900 text-white font-semibold border border-slate-800 rounded-lg text-xs focus:ring-2 focus:ring-blue-600 outline-hidden"
+            className="px-3.5 py-2 bg-slate-900 text-white font-semibold border border-slate-800 rounded-lg text-xs focus:ring-2 focus:ring-blue-600 outline-hidden max-w-md"
           >
-            <option value="BUNDLE_ALL">📦 ALL-IN-ONE (Paket Bundel Lengkap LPJ)</option>
-            <option value="CHECKLIST28">1. Checklist 28 Instrumen Kelengkapan</option>
-            <option value="K3_BKU">2. Buku Kas Umum (BKU / Form K3)</option>
-            <option value="REV_FORM3">3. Form 3 Belanja dan Rekonsiliasi</option>
-            <option value="K7A_REALISASI">4. Rekap Realisasi (Form K7a)</option>
-            <option value="K7B_REGISTER">5. Register Penutupan Kas (Form K7b)</option>
-            <option value="K7C_BA_KAS">6. BA Pemeriksaan Kas (Form K7c)</option>
-            <option value="K5_BANK">7. Buku Bantu Bank (Form K5)</option>
-            <option value="K6_PAJAK">8. Buku Bantu Pajak (Form K6)</option>
-            <option value="PAJAK_NIHIL">9. Surat Pernyataan Pajak Nihil</option>
-            <option value="FORM09_BMD">10. Form 09 Aset BMD</option>
-            <option value="REK_KORAN">11. Simulasi Rekening Koran</option>
+            <option value="BUNDLE_ALL">📦 ALL-IN-ONE (Urutan Cetak Resmi 19 Item)</option>
+            <option value="DOC_1_COVER">1. Cover / Sampul LPJ</option>
+            <option value="DOC_2_PENGANTAR">2. Surat Pengantar Tim BOSP</option>
+            <option value="DOC_3_4_5_NARASI">3-5. Pendahuluan &amp; Laporan Narasi</option>
+            <option value="DOC_6_SPTJM">6. Surat Pernyataan Tanggung Jawab Mutlak (SPTJM)</option>
+            <option value="DOC_7_RKAS_TRIWULAN">7. RKAS Per Triwulan I-IV</option>
+            <option value="DOC_8_BKU">8. Buku Kas Umum (BKU K3)</option>
+            <option value="DOC_9_BANK">9. Buku Pembantu Bank (Form K5)</option>
+            <option value="DOC_10_PAJAK">10. Buku Bantu Pajak (Form K6)</option>
+            <option value="DOC_11_REALISASI_K7A">11. Rekap Realisasi (Form K7a)</option>
+            <option value="DOC_12_REK_KORAN">12. Rekening Koran / Pernyataan</option>
+            <option value="DOC_13_PENUTUPAN_KAS_K7B">13. Register Penutupan Kas (K7b)</option>
+            <option value="DOC_14_BA_KAS_K7C">14. BA Pemeriksaan Kas (K7c)</option>
+            <option value="DOC_15_SK_TIM">15. SK Tim BOSP, Pengadaan &amp; PPHP</option>
+            <option value="DOC_16_BUKTI_KAS_BPU">16. Bukti Kas Pengeluaran (BPU C5)</option>
+            <option value="DOC_17_HONOR">17. Daftar Honorarium Guru &amp; Tendik</option>
+            <option value="DOC_18_DOKUMENTASI">18. Dokumentasi Pembelanjaan Urut BKU</option>
+            <option value="DOC_19_ASET_FORM09">19. Rekap Pembelian Barang Aset (Form 09)</option>
+            <option value="FORM3_REKON">Lampiran: Form 3 Belanja &amp; Rekon</option>
+            <option value="CHECKLIST28">Lampiran: Checklist 28 Instrumen</option>
           </select>
 
           <button
             onClick={() => setShowQuickKopToolbar((prev) => !prev)}
-            className={`px-3.5 py-2 border rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
+            className={`px-3.5 py-2 border rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ${
               showQuickKopToolbar
                 ? "bg-emerald-600 border-emerald-600 text-white shadow-xs"
                 : "bg-emerald-50 border-emerald-200 text-emerald-800 hover:bg-emerald-100"
             }`}
             title="Buka / Tutup Bilah Edit Kop Surat"
           >
-            <Sliders className="w-4 h-4 text-emerald-600 group-hover:text-emerald-700" />
+            <Sliders className="w-4 h-4" />
             <span>Bilah Edit Kop</span>
           </button>
 
           <button
             onClick={() => setIsKopModalOpen(true)}
-            className={`px-3 py-2 border rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
+            className={`px-3 py-2 border rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
               props.schoolInfo.letterheadImage
                 ? "bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
                 : "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200"
@@ -307,10 +340,10 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = (props) => {
 
           <button
             onClick={handlePrint}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg text-xs flex items-center gap-2 shadow-xs transition"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg text-xs flex items-center gap-2 shadow-xs transition cursor-pointer"
           >
             <Printer className="w-4 h-4" />
-            <span>Cetak Dokumen (PDF)</span>
+            <span>Cetak PDF LPJ</span>
           </button>
         </div>
       </div>
@@ -325,7 +358,7 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = (props) => {
         />
       )}
 
-      {/* Filter Bar: Per Tahapan, Per Triwulan, Per Bulan */}
+      {/* Filter Bar */}
       <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80 flex flex-wrap items-center justify-between gap-4 text-xs print:hidden">
         <div className="flex items-center gap-2">
           <Filter className="w-4 h-4 text-blue-600" />
@@ -381,12 +414,6 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = (props) => {
               <option value="April">April</option>
               <option value="Mei">Mei</option>
               <option value="Juni">Juni</option>
-              <option value="Juli">Juli</option>
-              <option value="Agustus">Agustus</option>
-              <option value="September">September</option>
-              <option value="Oktober">Oktober</option>
-              <option value="November">November</option>
-              <option value="Desember">Desember</option>
             </select>
           </div>
 
@@ -394,7 +421,7 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = (props) => {
           {isFiltered && (
             <button
               onClick={handleResetFilters}
-              className="px-2.5 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-xs font-medium flex items-center gap-1 transition"
+              className="px-2.5 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-xs font-medium flex items-center gap-1 transition cursor-pointer"
               title="Reset Filter"
             >
               <RefreshCw className="w-3.5 h-3.5" />
@@ -424,42 +451,57 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = (props) => {
       {/* Document View Area */}
       <div className="bg-slate-100/70 p-4 sm:p-8 rounded-xl border border-slate-200/60 shadow-inner min-h-[600px] overflow-x-auto print:bg-white print:p-0 print:shadow-none print:border-none">
         {selectedDoc === "BUNDLE_ALL" && <DocFullBundle {...activeDocProps} />}
-        {selectedDoc === "CHECKLIST28" && (
-          <DocChecklist28 schoolInfo={filteredSchoolInfo} checklistItems={props.checklistItems} />
+        {selectedDoc === "DOC_1_COVER" && <DocCover schoolInfo={filteredSchoolInfo} />}
+        {selectedDoc === "DOC_2_PENGANTAR" && <DocSuratPengantar schoolInfo={filteredSchoolInfo} />}
+        {selectedDoc === "DOC_3_4_5_NARASI" && (
+          <DocNarasiLpj schoolInfo={filteredSchoolInfo} financialSummary={filteredFinancialSummary} />
         )}
-        {selectedDoc === "K3_BKU" && (
+        {selectedDoc === "DOC_6_SPTJM" && (
+          <DocSptjm schoolInfo={filteredSchoolInfo} financialSummary={filteredFinancialSummary} />
+        )}
+        {selectedDoc === "DOC_7_RKAS_TRIWULAN" && (
+          <DocRkasTriwulan schoolInfo={filteredSchoolInfo} rkasItems={props.rkasItems} />
+        )}
+        {selectedDoc === "DOC_8_BKU" && (
           <DocBkuK3 schoolInfo={filteredSchoolInfo} transactions={filteredTransactions} />
         )}
-        {selectedDoc === "REV_FORM3" && (
-          <DocForm3Rekon
-            schoolInfo={filteredSchoolInfo}
-            form3Rows={filteredForm3Rows}
-            financialSummary={filteredFinancialSummary}
-          />
-        )}
-        {selectedDoc === "K7A_REALISASI" && (
+        {selectedDoc === "DOC_9_BANK" && <DocBankK5 schoolInfo={filteredSchoolInfo} />}
+        {selectedDoc === "DOC_10_PAJAK" && <DocPajakK6 schoolInfo={filteredSchoolInfo} />}
+        {selectedDoc === "DOC_11_REALISASI_K7A" && (
           <DocRealisasiK7a
             schoolInfo={filteredSchoolInfo}
             rkasItems={props.rkasItems}
             financialSummary={filteredFinancialSummary}
           />
         )}
-        {selectedDoc === "K7B_REGISTER" && (
-          <DocPenutupanKasK7b
-            schoolInfo={filteredSchoolInfo}
-            denominations={props.denominations}
-          />
+        {selectedDoc === "DOC_12_REK_KORAN" && <DocRekeningKoran schoolInfo={filteredSchoolInfo} />}
+        {selectedDoc === "DOC_13_PENUTUPAN_KAS_K7B" && (
+          <DocPenutupanKasK7b schoolInfo={filteredSchoolInfo} denominations={props.denominations} />
         )}
-        {selectedDoc === "K7C_BA_KAS" && (
-          <DocBAPemeriksaanKasK7c schoolInfo={filteredSchoolInfo} />
+        {selectedDoc === "DOC_14_BA_KAS_K7C" && <DocBAPemeriksaanKasK7c schoolInfo={filteredSchoolInfo} />}
+        {selectedDoc === "DOC_15_SK_TIM" && <DocSkTim schoolInfo={filteredSchoolInfo} />}
+        {selectedDoc === "DOC_16_BUKTI_KAS_BPU" && (
+          <DocBuktiKasPengeluaran schoolInfo={filteredSchoolInfo} transactions={filteredTransactions} />
         )}
-        {selectedDoc === "K5_BANK" && <DocBankK5 schoolInfo={filteredSchoolInfo} />}
-        {selectedDoc === "K6_PAJAK" && <DocPajakK6 schoolInfo={filteredSchoolInfo} />}
-        {selectedDoc === "PAJAK_NIHIL" && <DocRekapPajakNihil schoolInfo={filteredSchoolInfo} />}
-        {selectedDoc === "FORM09_BMD" && (
+        {selectedDoc === "DOC_17_HONOR" && (
+          <DocDaftarHonor schoolInfo={filteredSchoolInfo} transactions={filteredTransactions} />
+        )}
+        {selectedDoc === "DOC_18_DOKUMENTASI" && (
+          <DocDokumentasiFoto schoolInfo={filteredSchoolInfo} transactions={filteredTransactions} />
+        )}
+        {selectedDoc === "DOC_19_ASET_FORM09" && (
           <DocAsetForm09 schoolInfo={filteredSchoolInfo} assets={props.assets} />
         )}
-        {selectedDoc === "REK_KORAN" && <DocRekeningKoran schoolInfo={filteredSchoolInfo} />}
+        {selectedDoc === "FORM3_REKON" && (
+          <DocForm3Rekon
+            schoolInfo={filteredSchoolInfo}
+            form3Rows={filteredForm3Rows}
+            financialSummary={filteredFinancialSummary}
+          />
+        )}
+        {selectedDoc === "CHECKLIST28" && (
+          <DocChecklist28 schoolInfo={filteredSchoolInfo} checklistItems={props.checklistItems} />
+        )}
       </div>
 
       {props.onSaveSchoolInfo && (

@@ -17,8 +17,12 @@ export const DocumentHeader: React.FC<DocumentHeaderProps> = ({
   isLandscape = false,
 }) => {
   const [imageError, setImageError] = useState(false);
+  const [imgDimensions, setImgDimensions] = useState<{
+    naturalWidth: number;
+    naturalHeight: number;
+  } | null>(null);
 
-  // 2. HALAMAN LANDSCAPE (HORIZONTAL): KOSONGKAN BAGIAN HEADER SEPENUHNYA
+  // 1. HALAMAN LANDSCAPE (HORIZONTAL): KOSONGKAN BAGIAN HEADER SEPENUHNYA
   if (isLandscape) {
     return null;
   }
@@ -26,15 +30,34 @@ export const DocumentHeader: React.FC<DocumentHeaderProps> = ({
   const hasImage = Boolean(schoolInfo.letterheadImage && !imageError);
 
   const settings = schoolInfo.letterheadSettings || {
-    heightMm: 40,
-    scalePercent: 100,
     marginTopMm: 0,
     marginBottomMm: 8,
     borderStyle: "double",
   };
 
-  const heightMm = settings.heightMm ?? 40;
-  const isHighImage = heightMm > 45;
+  const marginTopMm = settings.marginTopMm ?? 0;
+  const marginBottomMm = settings.marginBottomMm ?? 8;
+
+  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const target = e.currentTarget;
+    if (target.naturalWidth && target.naturalHeight) {
+      setImgDimensions({
+        naturalWidth: target.naturalWidth,
+        naturalHeight: target.naturalHeight,
+      });
+    }
+  };
+
+  // LOGIKA PENENTUAN PRESISI RATIO ASPEK KOP PORTRAIT
+  // Lebar efektif A4 = 210mm - 20mm (kiri) - 20mm (kanan) = 170mm
+  let isTallImage = false;
+  if (imgDimensions && imgDimensions.naturalWidth > 0) {
+    const aspect = imgDimensions.naturalHeight / imgDimensions.naturalWidth;
+    const calculatedHeight = 170 * aspect; // dalam mm
+    if (calculatedHeight > 45) {
+      isTallImage = true;
+    }
+  }
 
   const getBorderCss = (bStyle?: string) => {
     switch (bStyle) {
@@ -51,19 +74,28 @@ export const DocumentHeader: React.FC<DocumentHeaderProps> = ({
   };
 
   return (
-    <div className="w-full relative print:mb-2 text-slate-900">
-      {/* 1. HALAMAN PORTRAIT (VERTIKAL) */}
+    <div
+      className="w-full relative print:mb-2 text-slate-900"
+      style={{
+        marginTop: `${marginTopMm}mm`,
+      }}
+    >
+      {/* HALAMAN PORTRAIT (VERTIKAL) */}
       {hasImage ? (
-        /* A1. GAMBAR KOP PNG */
+        /* GAMBAR KOP PNG / SVG */
         <div
-          className={`w-full relative pb-2 mb-3 ${getBorderCss(settings.borderStyle)}`}
+          className={`w-full relative pb-2 ${getBorderCss(settings.borderStyle)}`}
+          style={{
+            marginBottom: `${marginBottomMm}mm`,
+          }}
         >
           <div className="relative w-full flex items-center justify-between">
-            {isHighImage ? (
-              /* Jika tinggi > 45 mm: skala ulang tinggi=45 mm, letakkan rata tengah secara horizontal */
+            {isTallImage ? (
+              /* Jika tinggi dihitung > 45 mm: tinggi = 45 mm, lebar = 45 mm / aspect, posisi RATA TENGAH (simetris) */
               <img
                 src={schoolInfo.letterheadImage}
                 alt="Kop Surat Sekolah"
+                onLoad={handleImageLoad}
                 onError={() => setImageError(true)}
                 style={{
                   height: "45mm",
@@ -73,17 +105,18 @@ export const DocumentHeader: React.FC<DocumentHeaderProps> = ({
                 className="mx-auto block object-contain"
               />
             ) : (
-              /* Jika tinggi <= 45 mm: gambar full width (lebar 170 mm) dan rata kiri (menempel penuh kiri-kanan) */
+              /* Jika tinggi dihitung <= 45 mm: lebar = 170 mm (full width menempel margin kiri-kanan) & rata kiri */
               <img
                 src={schoolInfo.letterheadImage}
                 alt="Kop Surat Sekolah"
+                onLoad={handleImageLoad}
                 onError={() => setImageError(true)}
                 style={{
                   width: "100%",
-                  height: `${heightMm}mm`,
                   maxHeight: "45mm",
+                  objectFit: "fill",
                 }}
-                className="w-full block object-fill sm:object-contain"
+                className="w-full block"
               />
             )}
 
@@ -97,8 +130,13 @@ export const DocumentHeader: React.FC<DocumentHeaderProps> = ({
           </div>
         </div>
       ) : (
-        /* A2. TEKS HEADER DEFAULT (JIKA TIDAK ADA GAMBAR) */
-        <div className="w-full mb-3 border-b-4 border-double border-slate-900 pb-2 relative flex justify-between items-start">
+        /* TEKS HEADER DEFAULT (JIKA TIDAK ADA GAMBAR) */
+        <div
+          className="w-full border-b-4 border-double border-slate-900 pb-2 relative flex justify-between items-start"
+          style={{
+            marginBottom: `${marginBottomMm}mm`,
+          }}
+        >
           <div className="text-left space-y-0.5">
             {/* Nama Sekolah (font 14, bold, rata kiri) */}
             <h2 className="text-[14pt] font-extrabold uppercase tracking-wide text-slate-900 leading-tight">
@@ -142,4 +180,5 @@ export const DocumentHeader: React.FC<DocumentHeaderProps> = ({
     </div>
   );
 };
+
 

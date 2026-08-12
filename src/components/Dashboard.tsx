@@ -7,6 +7,7 @@ import {
   ChecklistItem,
 } from "../types/lpj";
 import { formatRupiah } from "../utils/lpjCalculations";
+import { SpendingTrendChart } from "./SpendingTrendChart";
 import {
   Wallet,
   TrendingDown,
@@ -141,6 +142,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </p>
         </div>
       </div>
+
+      {/* Summary Spending Trend & BOSP Allocation Chart (Recharts) */}
+      <SpendingTrendChart
+        financialSummary={financialSummary}
+        monthlySummaries={monthlySummaries}
+      />
 
       {/* Monthly Realization & Spending Breakdown Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

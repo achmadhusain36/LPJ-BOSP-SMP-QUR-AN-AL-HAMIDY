@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import { SchoolInfo, FinancialSummary, ComplianceRule } from "../types/lpj";
 import { Sparkles, Bot, Send, FileText, CheckCircle2, ShieldCheck, RefreshCw } from "lucide-react";
 
@@ -7,9 +7,6 @@ interface AiAssistantProps {
   financialSummary: FinancialSummary;
   complianceRules: ComplianceRule[];
 }
-
-// OPTIMIZED: Limit chat history to prevent memory bloat
-const MAX_CHAT_MESSAGES = 50;
 
 export const AiAssistant: React.FC<AiAssistantProps> = ({
   schoolInfo,
@@ -26,7 +23,7 @@ export const AiAssistant: React.FC<AiAssistantProps> = ({
   const [auditResult, setAuditResult] = useState<string | null>(null);
   const [isGeneratingAudit, setIsGeneratingAudit] = useState(false);
 
-  // Chatbot State - OPTIMIZED: Initialize with max history limit
+  // Chatbot State
   const [messages, setMessages] = useState<Array<{ sender: "user" | "ai"; text: string }>>([
     {
       sender: "ai",
@@ -37,7 +34,7 @@ export const AiAssistant: React.FC<AiAssistantProps> = ({
   const [isSendingChat, setIsSendingChat] = useState(false);
 
   // Handle Generate Narrative
-  const handleGenerateNarrative = useCallback(async () => {
+  const handleGenerateNarrative = async () => {
     setIsGeneratingNarrative(true);
     try {
       const res = await fetch("/api/gemini/generate-narrative", {
@@ -52,10 +49,10 @@ export const AiAssistant: React.FC<AiAssistantProps> = ({
     } finally {
       setIsGeneratingNarrative(false);
     }
-  }, [schoolInfo, financialSummary]);
+  };
 
   // Handle Generate Audit
-  const handleGenerateAudit = useCallback(async () => {
+  const handleGenerateAudit = async () => {
     setIsGeneratingAudit(true);
     try {
       const res = await fetch("/api/gemini/analyze-lpj", {
@@ -70,56 +67,38 @@ export const AiAssistant: React.FC<AiAssistantProps> = ({
     } finally {
       setIsGeneratingAudit(false);
     }
-  }, [schoolInfo, financialSummary, complianceRules]);
+  };
 
-  // Handle Send Chat - OPTIMIZED: Limit message history
-  const handleSendChat = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!chatInput.trim() || isSendingChat) return;
+  // Handle Send Chat
+  const handleSendChat = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim() || isSendingChat) return;
 
-      const userMsg = chatInput.trim();
-      
-      // Add user message and limit history
-      setMessages((prev) => {
-        const updated = [...prev, { sender: "user", text: userMsg }];
-        // Keep only the most recent MAX_CHAT_MESSAGES
-        return updated.slice(-MAX_CHAT_MESSAGES);
+    const userMsg = chatInput.trim();
+    setMessages((prev) => [...prev, { sender: "user", text: userMsg }]);
+    setChatInput("");
+    setIsSendingChat(true);
+
+    try {
+      const res = await fetch("/api/gemini/chat-assistant", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: userMsg,
+          context: { schoolInfo, financialSummary },
+        }),
       });
-      
-      setChatInput("");
-      setIsSendingChat(true);
-
-      try {
-        const res = await fetch("/api/gemini/chat-assistant", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            message: userMsg,
-            context: { schoolInfo, financialSummary },
-          }),
-        });
-        const data = await res.json();
-        
-        // Add AI response and limit history
-        setMessages((prev) => {
-          const updated = [...prev, { sender: "ai", text: data.reply }];
-          return updated.slice(-MAX_CHAT_MESSAGES);
-        });
-      } catch (error) {
-        setMessages((prev) => {
-          const updated = [
-            ...prev,
-            { sender: "ai", text: "Maaf, terjadi kesalahan koneksi AI server." },
-          ];
-          return updated.slice(-MAX_CHAT_MESSAGES);
-        });
-      } finally {
-        setIsSendingChat(false);
-      }
-    },
-    [chatInput, isSendingChat, schoolInfo, financialSummary]
-  );
+      const data = await res.json();
+      setMessages((prev) => [...prev, { sender: "ai", text: data.reply }]);
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        { sender: "ai", text: "Maaf, terjadi kesalahan koneksi AI server." },
+      ]);
+    } finally {
+      setIsSendingChat(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
