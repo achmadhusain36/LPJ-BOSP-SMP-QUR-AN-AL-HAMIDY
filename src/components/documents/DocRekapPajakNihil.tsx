@@ -33,7 +33,7 @@ export const DocRekapPajakNihil: React.FC<DocRekapPajakNihilProps> = ({ schoolIn
           Dengan ini menyatakan dengan sebenarnya bahwa dalam pelaksanaan realisasi Anggaran Dana Bantuan Operasional Satuan Pendidikan (BOSP) Reguler Tahap 1 Tahun Anggaran 2026 sebesar <strong>Rp 51.886.000,- (Lima Puluh Satu Juta Delapan Ratus Delapan Puluh Enam Ribu Rupiah)</strong>, seluruh kewajiban pemotongan dan penyetoran pajak bendahara berstatus <strong>NIHIL (Rp 0)</strong>.
         </p>
 
-        <div className="bg-gray-50 p-4 border border-gray-300 rounded print:bg-transparent print:border-gray-800">
+        <div className="bg-gray-50 p-4 border border-gray-300 rounded print:bg-transparent print:border-none print:p-0">
           <p className="font-bold mb-2 uppercase text-center border-b border-gray-400 pb-1">
             RINCIAN REKAPITULASI PERPAJAKAN JANUARI - JUNI 2026
           </p>

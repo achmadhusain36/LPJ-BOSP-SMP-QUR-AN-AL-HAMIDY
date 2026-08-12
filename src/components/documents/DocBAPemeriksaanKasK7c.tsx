@@ -45,7 +45,7 @@ export const DocBAPemeriksaanKasK7c: React.FC<DocBAPemeriksaanKasK7cProps> = ({
           Telah melakukan pemeriksaan fisik kas tempat penyimpanan uang BOSP (Brankas Sekolah) dan pencatatan BKU per tanggal 30 Juni 2026. Berdasarkan pemeriksaan tersebut, diperoleh hasil sebagai berikut:
         </p>
 
-        <div className="bg-gray-50 border border-gray-400 p-4 rounded space-y-2 font-mono text-[11px] print:bg-transparent print:border-gray-800">
+        <div className="bg-gray-50 border border-gray-400 p-4 rounded space-y-2 font-mono text-[11px] print:bg-transparent print:border-none print:p-0">
           <div className="flex justify-between border-b border-gray-300 pb-1">
             <span>A. Saldo Kas Menurut Buku Kas Umum (BKU)</span>
             <span className="font-bold">{formatRupiah(totalCashBalance)}</span>

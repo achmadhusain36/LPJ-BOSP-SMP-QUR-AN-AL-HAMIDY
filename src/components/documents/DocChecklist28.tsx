@@ -31,13 +31,13 @@ export const DocChecklist28: React.FC<DocChecklist28Props> = ({
         docCode="FORM CHECKLIST 28"
       />
 
-      <div className="mb-4 flex justify-between items-center bg-gray-50 p-3 rounded border border-gray-300 text-xs print:bg-transparent print:border-gray-800">
+      <div className="mb-4 flex justify-between items-center bg-gray-50 p-3 rounded border border-gray-300 text-xs print:bg-transparent print:border-none print:p-0">
         <div>
           <span className="font-bold">Sekolah:</span> {schoolInfo.name} ({schoolInfo.npsn}) | <span className="font-bold">Kecamatan:</span> {schoolInfo.district}
         </div>
         <div className="flex gap-4 font-bold text-xs">
-          <span className="text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded print:border print:border-gray-800">ADA: {adaCount} Berkas</span>
-          <span className="text-amber-800 bg-amber-100 px-2 py-0.5 rounded print:border print:border-gray-800">TIDAK: {tidakCount} Berkas</span>
+          <span className="text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded print:border-none">ADA: {adaCount} Berkas</span>
+          <span className="text-amber-800 bg-amber-100 px-2 py-0.5 rounded print:border-none">TIDAK: {tidakCount} Berkas</span>
         </div>
       </div>
 
@@ -87,7 +87,7 @@ export const DocChecklist28: React.FC<DocChecklist28Props> = ({
         })}
       </div>
 
-      <div className="mt-4 p-3 bg-amber-50 border border-amber-300 rounded text-[11px] print:bg-transparent print:border-gray-800">
+      <div className="mt-4 p-3 bg-amber-50 border border-amber-300 rounded text-[11px] print:bg-transparent print:border-none print:p-0">
         <p className="font-bold text-amber-900 print:text-black mb-1">Catatan Tim Verifikasi LPJ BOSP Kabupaten Pringsewu:</p>
         <p> Dokumen berstatus <strong>ADA ({adaCount} berkas)</strong> telah berhasil digenerate dan diverifikasi secara otomatis oleh sistem.</p>
         <p> Dokumen berstatus <strong>TIDAK ({tidakCount} berkas)</strong> merupakan dokumen pendukung fisik (seperti foto pengerjaan sumur bor, foto barang, SK mengajar, & SPT e-Filing) yang wajib dilengkapi cetakan fisiknya sebelum penyerahan akhir ke Dinas Pendidikan.</p>

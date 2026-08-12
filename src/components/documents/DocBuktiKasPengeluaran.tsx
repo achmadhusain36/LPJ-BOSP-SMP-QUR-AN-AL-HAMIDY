@@ -33,7 +33,7 @@ export const DocBuktiKasPengeluaran: React.FC<DocBuktiKasPengeluaranProps> = ({
           return (
             <div
               key={tx.id || idx}
-              className="bg-white p-6 sm:p-8 border border-gray-300 rounded-lg shadow-xs print:border-gray-800 print:shadow-none page-break-after-always"
+              className="bg-white p-6 sm:p-8 border border-gray-300 rounded-lg shadow-xs print:border-none print:shadow-none print:p-0 page-break-after-always"
             >
               <DocumentHeader schoolInfo={schoolInfo} />
 
@@ -158,7 +158,7 @@ export const DocBuktiKasPengeluaran: React.FC<DocBuktiKasPengeluaranProps> = ({
         return (
           <React.Fragment key={tx.id || idx}>
             {/* 1. SBP INDUK HONOR BULANAN */}
-            <div className="bg-white p-6 sm:p-8 border border-gray-300 rounded-lg shadow-xs print:border-gray-800 print:shadow-none page-break-after-always">
+            <div className="bg-white p-6 sm:p-8 border border-gray-300 rounded-lg shadow-xs print:border-none print:shadow-none print:p-0 page-break-after-always">
               <DocumentHeader schoolInfo={schoolInfo} />
 
               <div className="border-b-2 border-gray-800 pb-2 mb-4 flex justify-between items-center mt-2">
@@ -279,7 +279,7 @@ export const DocBuktiKasPengeluaran: React.FC<DocBuktiKasPengeluaranProps> = ({
             </div>
 
             {/* 2. LAMPIRAN WAJIB: DAFTAR PENERIMAAN HONOR PER INDIVIDU (BULANAN) */}
-            <div className="bg-white p-6 sm:p-8 border border-gray-300 rounded-lg shadow-xs print:border-gray-800 print:shadow-none page-break-after-always">
+            <div className="bg-white p-6 sm:p-8 border border-gray-300 rounded-lg shadow-xs print:border-none print:shadow-none print:p-0 page-break-after-always">
               <DocumentHeader schoolInfo={schoolInfo} />
 
               <div className="text-center my-3">
@@ -367,7 +367,7 @@ export const DocBuktiKasPengeluaran: React.FC<DocBuktiKasPengeluaranProps> = ({
             {isApril && (
               <React.Fragment>
                 {/* SBP INDUK HONOR INSIDENTIL */}
-                <div className="bg-white p-6 sm:p-8 border border-gray-300 rounded-lg shadow-xs print:border-gray-800 print:shadow-none page-break-after-always">
+                <div className="bg-white p-6 sm:p-8 border border-gray-300 rounded-lg shadow-xs print:border-none print:shadow-none print:p-0 page-break-after-always">
                   <DocumentHeader schoolInfo={schoolInfo} />
 
                   <div className="border-b-2 border-gray-800 pb-2 mb-4 flex justify-between items-center mt-2">
@@ -485,7 +485,7 @@ export const DocBuktiKasPengeluaran: React.FC<DocBuktiKasPengeluaranProps> = ({
                 </div>
 
                 {/* LAMPIRAN BUKTI SETOR PAJAK (SSP) PPH 21 INSIDENTIL */}
-                <div className="bg-white p-6 sm:p-8 border border-gray-300 rounded-lg shadow-xs print:border-gray-800 print:shadow-none page-break-after-always">
+                <div className="bg-white p-6 sm:p-8 border border-gray-300 rounded-lg shadow-xs print:border-none print:shadow-none print:p-0 page-break-after-always">
                   <DocumentHeader schoolInfo={schoolInfo} />
 
                   <div className="text-center my-3">
@@ -500,7 +500,7 @@ export const DocBuktiKasPengeluaran: React.FC<DocBuktiKasPengeluaranProps> = ({
                     </p>
                   </div>
 
-                  <div className="border border-gray-300 rounded p-4 my-4 space-y-3 text-[11px]">
+                  <div className="border border-gray-300 print:border-none rounded p-4 my-4 space-y-3 text-[11px]">
                     <div className="grid grid-cols-2 gap-2 border-b border-gray-200 pb-2 font-mono">
                       <div>
                         <span className="text-gray-500 block text-[10px]">NPWP Pemotong / Sekolah:</span>

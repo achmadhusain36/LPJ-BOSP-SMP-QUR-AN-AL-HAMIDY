@@ -124,7 +124,7 @@ export const DocumentHeader: React.FC<DocumentHeaderProps> = ({
 
             {docCode && (
               <div className="absolute top-0 right-0 hidden sm:block print:block">
-                <div className="px-2 py-0.5 bg-slate-100 text-slate-900 border border-slate-700 rounded text-[9px] font-bold print:border-gray-800 print:bg-white">
+                <div className="px-2 py-0.5 bg-slate-100 text-slate-900 border border-slate-700 rounded text-[9px] font-bold print:border-slate-400 print:bg-white">
                   {docCode}
                 </div>
               </div>
@@ -156,7 +156,7 @@ export const DocumentHeader: React.FC<DocumentHeaderProps> = ({
 
           {docCode && (
             <div className="text-right shrink-0 ml-4">
-              <div className="inline-block px-2 py-0.5 bg-slate-100 text-slate-900 border border-slate-700 rounded text-[9px] font-bold print:border-gray-800 print:bg-white">
+              <div className="inline-block px-2 py-0.5 bg-slate-100 text-slate-900 border border-slate-700 rounded text-[9px] font-bold print:border-slate-400 print:bg-white">
                 {docCode}
               </div>
             </div>
